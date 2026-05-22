@@ -1,711 +1,1231 @@
--- =========================================================================
--- ค่ายสคริปต์: KIDz HUB | เกม: Fruit Battlegrounds (เวอร์ชันสมบูรณ์)
--- ฟีเจอร์: ออโต้ฟาร์ม, สุ่มผลแบบเลือกช่อง, บอสอัจฉริยะ, PvP, เทเลพอร์ต, เครื่องมือลดแลค+กันแบนขั้นสุด
--- UI: KIDzUI by KIDZ5
--- =========================================================================
+    -- =========================================================================
+    -- ค่ายสคริปต์: KIDz HUB | เกม: Fruit Battlegrounds (เวอร์ชันสมบูรณ์)
+    -- ฟีเจอร์: ออโต้ฟาร์ม, สุ่มผลแบบเลือกช่อง, บอสอัจฉริยะ, PvP, เทเลพอร์ต, เครื่องมือลดแลค+กันแบนขั้นสุด
+    -- UI: KIDzUI by KIDZ5
+    -- =========================================================================
 
--- =========================================================================
--- [🔥 EXTREME ANTI-BAN & SAFETY BYPASS] ระบบป้องกันการโดนแบนขั้นสูงสุด
--- =========================================================================
-local cloneref = clonefunction or function(o) return o end
-local hookmetamethod = hookmetamethod or function() return end
-local oldNamecall
+    -- =========================================================================
+    -- [🔥 EXTREME ANTI-BAN & SAFETY BYPASS] ระบบป้องกันการโดนแบนขั้นสูงสุด
+    -- =========================================================================
+    local cloneref = clonefunction or function(o) return o end
+    local hookmetamethod = hookmetamethod or function() return end
+    local oldNamecall
 
-if hookmetamethod then
-    pcall(function()
-        oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
-            local method = getnamecallmethod()
-            
-            -- ปล่อยผ่านถ้าเป็นคำสั่งที่มาจากสคริปต์เราเอง
-            if not checkcaller() then 
-                return oldNamecall(self, ...) 
-            end
-            
-            -- ดักจับการส่งข้อมูลเข้าเซิร์ฟเวอร์ (FireServer / InvokeServer)
-            if tostring(method) == "FireServer" or tostring(method) == "InvokeServer" then
-                local remoteName = tostring(self)
-                local lowerName = string.lower(remoteName)
+    if hookmetamethod then
+        pcall(function()
+            oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+                local method = getnamecallmethod()
                 
-                -- บล็อก Remote ที่น่าสงสัยว่าจะฟ้องเซิร์ฟเวอร์ (Anti-Cheat)
-                if string.find(lowerName, "log") or 
-                   string.find(lowerName, "report") or 
-                   string.find(lowerName, "ban") or 
-                   string.find(lowerName, "kick") or 
-                   string.find(lowerName, "crash") or 
-                   string.find(lowerName, "warn") or 
-                   string.find(lowerName, "detect") or 
-                   string.find(lowerName, "cheat") or 
-                   string.find(lowerName, "admin") then
+                -- ปล่อยผ่านถ้าเป็นคำสั่งที่มาจากสคริปต์เราเอง
+                if not checkcaller() then 
+                    return oldNamecall(self, ...) 
+                end
+                
+                -- ดักจับการส่งข้อมูลเข้าเซิร์ฟเวอร์ (FireServer / InvokeServer)
+                if tostring(method) == "FireServer" or tostring(method) == "InvokeServer" then
+                    local remoteName = tostring(self)
+                    local lowerName = string.lower(remoteName)
                     
-                    -- ตีตกการส่งข้อมูลทิ้ง (ไม่ส่งไปที่เซิร์ฟเวอร์)
-                    return nil
+                    -- บล็อก Remote ที่น่าสงสัยว่าจะฟ้องเซิร์ฟเวอร์ (Anti-Cheat)
+                    if string.find(lowerName, "log") or 
+                    string.find(lowerName, "report") or 
+                    string.find(lowerName, "ban") or 
+                    string.find(lowerName, "kick") or 
+                    string.find(lowerName, "crash") or 
+                    string.find(lowerName, "warn") or 
+                    string.find(lowerName, "detect") or 
+                    string.find(lowerName, "cheat") or 
+                    string.find(lowerName, "admin") then
+                        
+                        -- ตีตกการส่งข้อมูลทิ้ง (ไม่ส่งไปที่เซิร์ฟเวอร์)
+                        return nil
+                    end
+                end
+                
+                return oldNamecall(self, ...)
+            end)
+        end)
+    end
+
+    -- =========================================================================
+    -- [รอระบบโหลดเสร็จ 100%] สำหรับการ Auto-Execute
+    -- =========================================================================
+    if not game:IsLoaded() then
+        game.Loaded:Wait()
+    end
+
+    local Players = game:GetService("Players")
+    local lp = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+
+    local function kidzLog(message)
+        print("[KIDz HUB] " .. message)
+    end
+
+    local function kidzWarn(message)
+        warn("[KIDz HUB ERROR] " .. message)
+    end
+
+    kidzLog("Starting initialization...")
+
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local VirtualInputManager = game:GetService("VirtualInputManager")
+    local GuiService = game:GetService("GuiService")
+    local CoreGui = game:GetService("CoreGui")
+    local UserInputService = game:GetService("UserInputService")
+    local TeleportService = game:GetService("TeleportService")
+    local RunService = game:GetService("RunService")
+    local HttpService = game:GetService("HttpService")
+
+    local Camera = workspace.CurrentCamera
+
+    _G.isUIOpen = true 
+
+    local function isPlaceholder(val)
+        if type(val) ~= "string" then 
+            return false 
+        end
+        if string.find(val, "กรุณา") or val == "" or val == "None" or val == "กดเลือกรายชื่อ" then
+            return true
+        end
+        return false
+    end
+
+    -- ฐานข้อมูลผลไม้และความแรร์
+local FruitDB = {}
+
+local function buildFruitDB()
+    pcall(function()
+        local ui = lp.PlayerGui:FindFirstChild("UI")
+        local spin = ui and ui:FindFirstChild("Spin")
+        local fruitList = spin and spin:FindFirstChild("FruitList")
+
+        if not fruitList then
+            kidzWarn("ไม่พบ FruitList — จะลองใหม่ภายหลัง")
+            return
+        end
+
+        local newDB = {}
+        local count = 0
+
+        for _, rarityFolder in ipairs(fruitList:GetChildren()) do
+            if rarityFolder.Name == "Handler" then continue end
+            local rarityLevel = tonumber(rarityFolder.Name)
+            if not rarityLevel then continue end
+
+            local inner = rarityFolder:FindFirstChild("Inner")
+            if not inner then continue end
+
+            for _, btn in ipairs(inner:GetChildren()) do
+                if btn:IsA("TextButton") then
+                    newDB[btn.Name] = rarityLevel
+                    count = count + 1
                 end
             end
-            
-            return oldNamecall(self, ...)
-        end)
+        end
+
+        if count > 0 then
+            FruitDB = newDB
+            kidzLog("FruitDB สแกนสำเร็จ: " .. count .. " ผลไม้")
+        end
     end)
 end
 
--- =========================================================================
--- [รอระบบโหลดเสร็จ 100%] สำหรับการ Auto-Execute
--- =========================================================================
-if not game:IsLoaded() then
-    game.Loaded:Wait()
-end
+-- Fallback กรณี FruitList ยังไม่โหลด (ใช้ข้อมูลจากเกมที่สแกนได้)
+local FruitDB_Fallback = {
+    -- Common (1)
+    ["Barrier"]=1, ["Chop"]=1, ["Sand"]=1,
 
-local Players = game:GetService("Players")
-local lp = Players.LocalPlayer or Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    -- Uncommon (2)
+    ["Smoke"]=2, ["Rubber"]=2, ["Gas"]=2, ["Falcon"]=2,
 
-local function kidzLog(message)
-    print("[KIDz HUB] " .. message)
-end
+    -- Rare (3)
+    ["Bomb"]=3, ["Ice"]=3, ["Darkness"]=3, ["Ash"]=3,
 
-local function kidzWarn(message)
-    warn("[KIDz HUB ERROR] " .. message)
-end
+    -- Epic (4)
+    ["Light"]=4, ["Flame"]=4, ["Magma"]=4, ["Paw"]=4, ["String"]=4, ["Love"]=4, ["Snow"]=4,
 
-kidzLog("Starting initialization...")
+    -- Legendary (5)
+    ["Dough"]=5, ["Dragon"]=5, ["FlameV2"]=5, ["Gravity"]=5,
+    ["IceV2"]=5, ["Leopard"]=5, ["LightV2"]=5, ["MagmaV2"]=5,
+    ["Magnet"]=5, ["Ope"]=5, ["Phoenix"]=5, ["Quake"]=5,
+    ["TSRubber"]=5, ["Venom"]=5,
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local VirtualInputManager = game:GetService("VirtualInputManager")
-local GuiService = game:GetService("GuiService")
-local CoreGui = game:GetService("CoreGui")
-local UserInputService = game:GetService("UserInputService")
-local TeleportService = game:GetService("TeleportService")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-
-local Camera = workspace.CurrentCamera
-
-_G.isUIOpen = true 
-
-local function isPlaceholder(val)
-    if type(val) ~= "string" then 
-        return false 
-    end
-    if string.find(val, "กรุณา") or val == "" or val == "None" or val == "กดเลือกรายชื่อ" then
-        return true
-    end
-    return false
-end
-
--- ฐานข้อมูลผลไม้และความแรร์
-local FruitDB = {
-    ["Barrier"]=1, ["Chop"]=1, ["Sand"]=1, ["Bomb"]=1, ["Spin"]=1,
-    ["Smoke"]=2, ["Flame"]=2, ["Ice"]=2, ["Dark"]=2, ["Rubber"]=2, ["Gas"]=2, ["Light"]=2,
-    ["Magma"]=3, ["Quake"]=3, ["Buddha"]=3, ["String"]=3, ["Paw"]=3, ["Falcon"]=3, ["Love"]=3,
-    ["Venom"]=4, ["Dough"]=4, ["Ope"]=4, ["Shadow"]=4, ["Trex"]=4, ["T-Rex"]=4, ["Mochi"]=4,
-    ["Leopard"]=5, ["Dragon"]=5, ["Soul"]=5, ["Kitsune"]=5, ["Magnet"]=5, ["Gravity"]=5,
-    ["Nika"]=6, ["DragonV2"]=6, ["Lightning"]=6, ["Vampire"]=6, ["Gear5"]=6, ["OpeV2"]=6
+    -- Mythic (6)
+    ["DarkXQuake"]=6, ["DoughV2"]=6, ["DragonV2"]=6, ["Impact"]=6,
+    ["LeopardV2"]=6, ["Lightning"]=6, ["Nika"]=6, ["Okuchi"]=6,
+    ["OpeV2"]=6, ["Soul"]=6,
 }
 
-local RarityMap = {
-    ["Common"] = 1,
-    ["Uncommon"] = 2,
-    ["Rare"] = 3,
-    ["Epic"] = 4,
-    ["Legendary"] = 5,
-    ["Mythic"] = 6
-}
+    local function getFruitRarity(fruitName)
+    if FruitDB[fruitName] then return FruitDB[fruitName] end
+    if FruitDB_Fallback[fruitName] then return FruitDB_Fallback[fruitName] end
+    return 99 -- ผลไม่รู้จัก = ป้องกันสุ่มทิ้ง
+end
 
-local function getGameCharacter(playerName)
-    local charsFolder = workspace:FindFirstChild("Characters")
-    local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-    if playersFolder then 
-        return playersFolder:FindFirstChild(playerName) 
+-- สแกนทันที และลองซ้ำถ้าล้มเหลว
+task.spawn(function()
+    task.wait(2)
+    buildFruitDB()
+    if next(FruitDB) == nil then
+        task.wait(3)
+        buildFruitDB()
     end
-    return nil
-end
-
-local function getMyCharacter()
-    return getGameCharacter(lp.Name) or lp.Character
-end
-
-kidzLog("Checking whitelist. (Attempt 1)")
-
-local ALLOWED_PLACE_IDS = {
-    [9224601490] = true 
-}
-
-if not ALLOWED_PLACE_IDS[game.PlaceId] then
-    kidzWarn("Validation failed! Invalid Place ID: " .. tostring(game.PlaceId))
-    lp:Kick("\n[KIDz HUB] ❌ ข้อมูลบางอย่างไม่ถูกต้อง\nสคริปต์นี้รองรับเฉพาะแมพ Fruit Battlegrounds เท่านั้น")
-    return 
-end
-
-kidzLog("Successfully connected to server, Loading script: Fruit Battlegrounds")
-
-kidzLog("Downloading UI Library and Addons...")
-local KIDzUI = loadstring(game:HttpGet("https://github.com/KIDZ5/KIDzUI/releases/latest/download/main.lua"))()
-local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/KIDZ5/KIDzUI/master/Addons/SaveManager.lua"))()
-local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/KIDZ5/KIDzUI/master/Addons/InterfaceManager.lua"))()
-kidzLog("UI Library Loaded Successfully.")
-
-local Window = KIDzUI:CreateWindow({
-    Title = "KIDz HUB",
-    SubTitle = "Fruit Battlegrounds",
-    TabWidth = 160,
-    Size = UDim2.fromOffset(580, 580),
-    Acrylic = false,
-    Theme = "Dark",
-    MinimizeKey = Enum.KeyCode.LeftControl
-})
-
-UserInputService.InputEnded:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.LeftControl then 
-        _G.isUIOpen = not _G.isUIOpen 
+    -- รีสแกนทุก 30 วิ (รองรับผลใหม่ที่เพิ่มระหว่างเล่น)
+    while true do
+        task.wait(30)
+        buildFruitDB()
     end
 end)
 
--- จัดระเบียบหน้าเมนูให้ดูสวยงามและใช้งานง่ายขึ้น
-local Tabs = {
-    Main = Window:AddTab({ Title = "ระบบฟาร์มสกิล", Icon = "swords" }),
-    Spin = Window:AddTab({ Title = "สุ่มผล (Spin)", Icon = "star" }),
-    Combat = Window:AddTab({ Title = "ต่อสู้ (PvP & ESP)", Icon = "shield" }),
-    Boss = Window:AddTab({ Title = "ฟาร์มบอส", Icon = "crosshair" }),
-    Teleport = Window:AddTab({ Title = "เทเลพอร์ต", Icon = "navigation" }),
-    Tools = Window:AddTab({ Title = "เครื่องมือ", Icon = "wrench" }),
-    Misc = Window:AddTab({ Title = "ปลอดภัย", Icon = "refresh-ccw" }),
-    Settings = Window:AddTab({ Title = "ตั้งค่า", Icon = "settings" })
-}
+    local RarityMap = {
+        ["Common"] = 1,
+        ["Uncommon"] = 2,
+        ["Rare"] = 3,
+        ["Epic"] = 4,
+        ["Legendary"] = 5,
+        ["Mythic"] = 6
+    }
 
-local Options = KIDzUI.Options
-local originalSkyY = 5000
-local oldSpawnCFrame = nil
-local skillOrder = {}
-_G.kidzIsHoldingSkill = false
+    -- แปลงตัวเลขกลับเป็นชื่อ (ใช้แสดงผล)
+    local RarityNameMap = {
+        [1] = "Common", [2] = "Uncommon", [3] = "Rare",
+        [4] = "Epic", [5] = "Legendary", [6] = "Mythic"
+    }
 
-local function getRemote()
-    return ReplicatedStorage:FindFirstChild("Replicator") or ReplicatedStorage:FindFirstChild("ReplicatorNoYield")
-end
+    local function getGameCharacter(playerName)
+        local charsFolder = workspace:FindFirstChild("Characters")
+        local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
+        if playersFolder then 
+            return playersFolder:FindFirstChild(playerName) 
+        end
+        return nil
+    end
 
-local function cleanupStoppedTracks()
-    pcall(function()
-        local char = getMyCharacter()
-        if not char then return end
-        
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        if not hum then return end
-        
-        local animator = hum:FindFirstChildOfClass("Animator")
-        if not animator then return end
+    local function getMyCharacter()
+        return getGameCharacter(lp.Name) or lp.Character
+    end
 
-        local playing = animator:GetPlayingAnimationTracks()
-        if #playing > 50 then
-            for _, track in ipairs(playing) do
-                pcall(function()
-                    if track.WeightCurrent < 0.01 or track.Speed == 0 then 
-                        track:Stop(0) 
-                    end
-                end)
-            end
+    kidzLog("Checking whitelist. (Attempt 1)")
+
+    local ALLOWED_PLACE_IDS = {
+        [9224601490] = true 
+    }
+
+    if not ALLOWED_PLACE_IDS[game.PlaceId] then
+        kidzWarn("Validation failed! Invalid Place ID: " .. tostring(game.PlaceId))
+        lp:Kick("\n[KIDz HUB] ❌ ข้อมูลบางอย่างไม่ถูกต้อง\nสคริปต์นี้รองรับเฉพาะแมพ Fruit Battlegrounds เท่านั้น")
+        return 
+    end
+
+    kidzLog("Successfully connected to server, Loading script: Fruit Battlegrounds")
+
+    kidzLog("Downloading UI Library and Addons...")
+    local KIDzUI = loadstring(game:HttpGet("https://github.com/KIDZ5/KIDzUI/releases/latest/download/main.lua"))()
+    local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/KIDZ5/KIDzUI/master/Addons/SaveManager.lua"))()
+    local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/KIDZ5/KIDzUI/master/Addons/InterfaceManager.lua"))()
+    kidzLog("UI Library Loaded Successfully.")
+
+    local Window = KIDzUI:CreateWindow({
+        Title = "KIDz HUB",
+        SubTitle = "Fruit Battlegrounds",
+        TabWidth = 160,
+        Size = UDim2.fromOffset(580, 580),
+        Acrylic = false,
+        Theme = "Dark",
+        MinimizeKey = Enum.KeyCode.LeftControl
+    })
+
+    UserInputService.InputEnded:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.LeftControl then 
+            _G.isUIOpen = not _G.isUIOpen 
         end
     end)
-end
 
-task.spawn(function() 
-    while true do 
-        task.wait(2) 
-        cleanupStoppedTracks() 
-    end 
-end)
+    -- จัดระเบียบหน้าเมนูให้ดูสวยงามและใช้งานง่ายขึ้น
+    local Tabs = {
+        Main = Window:AddTab({ Title = "ระบบฟาร์มสกิล", Icon = "swords" }),
+        Spin = Window:AddTab({ Title = "สุ่มผล (Spin)", Icon = "star" }),
+        Combat = Window:AddTab({ Title = "ต่อสู้ (PvP & ESP)", Icon = "shield" }),
+        Boss = Window:AddTab({ Title = "ฟาร์มบอส", Icon = "crosshair" }),
+        Teleport = Window:AddTab({ Title = "เทเลพอร์ต", Icon = "navigation" }),
+        Tools = Window:AddTab({ Title = "เครื่องมือ", Icon = "wrench" }),
+        Misc = Window:AddTab({ Title = "ปลอดภัย", Icon = "refresh-ccw" }),
+        Settings = Window:AddTab({ Title = "ตั้งค่า", Icon = "settings" })
+    }
 
-local function cancelAllAnimations()
-    pcall(function()
-        local char = getMyCharacter()
-        local hum = char and char:FindFirstChildOfClass("Humanoid")
-        local animator = hum and hum:FindFirstChildOfClass("Animator")
-        if animator then 
-            for _, track in ipairs(animator:GetPlayingAnimationTracks()) do 
-                track:Stop(0) 
-            end 
-        end
-    end)
-end
+    local Options = KIDzUI.Options
+    local originalSkyY = 5000
+    local oldSpawnCFrame = nil
+    local skillOrder = {}
+    _G.kidzIsHoldingSkill = false
 
-local function getRage()
-    local currentRage = 0
-    pcall(function()
-        local attrRage = lp:GetAttribute("Rage")
-        if attrRage and type(attrRage) == "number" then 
-            currentRage = attrRage 
-        end
-        
-        local char = getMyCharacter()
-        if char then
-            local charRage = char:GetAttribute("Rage")
-            if charRage and type(charRage) == "number" and charRage > currentRage then 
-                currentRage = charRage 
-            end
-        end
-        
-        local bpRage = lp:FindFirstChild("Backpack") and lp.Backpack:FindFirstChild("Rage")
-        if bpRage and bpRage:IsA("NumberValue") and bpRage.Value > currentRage then 
-            currentRage = bpRage.Value 
-        end
-    end)
-    return currentRage
-end
+    local function getRemote()
+        return ReplicatedStorage:FindFirstChild("Replicator") or ReplicatedStorage:FindFirstChild("ReplicatorNoYield")
+    end
 
-local function fireSkill(fruitName, skillName, targetPos, delayTime)
-    local remote = getRemote()
-    if not remote then return end
-
-    task.spawn(function()
+    local function cleanupStoppedTracks()
         pcall(function()
             local char = getMyCharacter()
-            local root = char and char:FindFirstChild("HumanoidRootPart")
-            if not root then return end
+            if not char then return end
+            
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+            
+            local animator = hum:FindFirstChildOfClass("Animator")
+            if not animator then return end
 
-            local originV3 = root.Position
-            local targetV3 = targetPos or (originV3 + root.CFrame.LookVector * 100)
-            local directionV3 = (targetV3 - originV3).Unit
-            local lookAtCF = targetPos and CFrame.lookAt(originV3, targetV3) or root.CFrame
-
-            local function toNativeVector(v3)
-                if vector and vector.create then 
-                    return vector.create(v3.X, v3.Y, v3.Z) 
+            local playing = animator:GetPlayingAnimationTracks()
+            if #playing > 50 then
+                for _, track in ipairs(playing) do
+                    pcall(function()
+                        if track.WeightCurrent < 0.01 or track.Speed == 0 then 
+                            track:Stop(0) 
+                        end
+                    end)
                 end
-                return v3
             end
+        end)
+    end
 
-            local fakeMousePayload = {
-                RootCF = lookAtCF, 
-                CF = lookAtCF, 
-                CFrame = lookAtCF,
-                Position = toNativeVector(targetV3), 
-                Target = toNativeVector(targetV3), 
-                Hit = CFrame.new(targetV3),
-                MouseRay = {
-                    Normal = toNativeVector(Vector3.new(0, 1, 0)),
-                    Direction = toNativeVector(directionV3 * 1000), 
-                    Origin = toNativeVector(originV3),
-                    Position = toNativeVector(targetV3),
-                    Distance = (targetV3 - originV3).Magnitude,
-                    Material = Enum.Material.Air,
-                    Instance = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChildWhichIsA("BasePart") or nil
-                }
-            }
+    task.spawn(function() 
+        while true do 
+            task.wait(2) 
+            cleanupStoppedTracks() 
+        end 
+    end)
 
-            if remote:IsA("RemoteEvent") then 
-                remote:FireServer(fruitName, skillName, {MouseRay = fakeMousePayload.MouseRay})
-            elseif remote:IsA("RemoteFunction") then 
-                task.spawn(function() 
-                    remote:InvokeServer(fruitName, skillName, {MouseRay = fakeMousePayload.MouseRay}) 
-                end) 
+    local function cancelAllAnimations()
+        pcall(function()
+            local char = getMyCharacter()
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            local animator = hum and hum:FindFirstChildOfClass("Animator")
+            if animator then 
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do 
+                    track:Stop(0) 
+                end 
             end
+        end)
+    end
 
-            local isHold = false
-            local holdDuration = delayTime or 1.0
+    local function getRage()
+        local currentRage = 0
+        pcall(function()
+            local attrRage = lp:GetAttribute("Rage")
+            if attrRage and type(attrRage) == "number" then 
+                currentRage = attrRage 
+            end
+            
+            local char = getMyCharacter()
+            if char then
+                local charRage = char:GetAttribute("Rage")
+                if charRage and type(charRage) == "number" and charRage > currentRage then 
+                    currentRage = charRage 
+                end
+            end
+            
+            local bpRage = lp:FindFirstChild("Backpack") and lp.Backpack:FindFirstChild("Rage")
+            if bpRage and bpRage:IsA("NumberValue") and bpRage.Value > currentRage then 
+                currentRage = bpRage.Value 
+            end
+        end)
+        return currentRage
+    end
 
+    local function fireSkill(fruitName, skillName, targetPos, delayTime)
+        local remote = getRemote()
+        if not remote then return end
+
+        task.spawn(function()
             pcall(function()
-                for _, parent in ipairs({lp:FindFirstChild("Backpack"), char}) do
-                    if parent then
-                        for _, tool in ipairs(parent:GetChildren()) do
-                            local tName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool.Name
-                            if type(tName) == "string" and string.gsub(tName, "%s+", "") == skillName then
-                                local ht = tool:GetAttribute("HoldTime") or tool:GetAttribute("MaxHold") or tool:GetAttribute("Duration") or tool:GetAttribute("ChargeTime")
-                                if type(ht) == "number" and ht > 0 then
-                                    isHold = true 
-                                    holdDuration = ht
-                                elseif tool:GetAttribute("Hold") == true or tool:GetAttribute("IsHold") == true then
-                                    isHold = true 
-                                    if holdDuration == 0 then holdDuration = 1.0 end
+                local char = getMyCharacter()
+                local root = char and char:FindFirstChild("HumanoidRootPart")
+                if not root then return end
+
+                local originV3 = root.Position
+                local targetV3 = targetPos or (originV3 + root.CFrame.LookVector * 100)
+                local directionV3 = (targetV3 - originV3).Unit
+                local lookAtCF = targetPos and CFrame.lookAt(originV3, targetV3) or root.CFrame
+
+                local function toNativeVector(v3)
+                    if vector and vector.create then 
+                        return vector.create(v3.X, v3.Y, v3.Z) 
+                    end
+                    return v3
+                end
+
+                local fakeMousePayload = {
+                    RootCF = lookAtCF, 
+                    CF = lookAtCF, 
+                    CFrame = lookAtCF,
+                    Position = toNativeVector(targetV3), 
+                    Target = toNativeVector(targetV3), 
+                    Hit = CFrame.new(targetV3),
+                    MouseRay = {
+                        Normal = toNativeVector(Vector3.new(0, 1, 0)),
+                        Direction = toNativeVector(directionV3 * 1000), 
+                        Origin = toNativeVector(originV3),
+                        Position = toNativeVector(targetV3),
+                        Distance = (targetV3 - originV3).Magnitude,
+                        Material = Enum.Material.Air,
+                        Instance = workspace:FindFirstChild("Map") and workspace.Map:FindFirstChildWhichIsA("BasePart") or nil
+                    }
+                }
+
+                if remote:IsA("RemoteEvent") then 
+                    remote:FireServer(fruitName, skillName, {MouseRay = fakeMousePayload.MouseRay})
+                elseif remote:IsA("RemoteFunction") then 
+                    task.spawn(function() 
+                        remote:InvokeServer(fruitName, skillName, {MouseRay = fakeMousePayload.MouseRay}) 
+                    end) 
+                end
+
+                local isHold = false
+                local holdDuration = delayTime or 1.0
+
+                pcall(function()
+                    for _, parent in ipairs({lp:FindFirstChild("Backpack"), char}) do
+                        if parent then
+                            for _, tool in ipairs(parent:GetChildren()) do
+                                local tName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool.Name
+                                if type(tName) == "string" and string.gsub(tName, "%s+", "") == skillName then
+                                    local ht = tool:GetAttribute("HoldTime") or tool:GetAttribute("MaxHold") or tool:GetAttribute("Duration") or tool:GetAttribute("ChargeTime")
+                                    if type(ht) == "number" and ht > 0 then
+                                        isHold = true 
+                                        holdDuration = ht
+                                    elseif tool:GetAttribute("Hold") == true or tool:GetAttribute("IsHold") == true then
+                                        isHold = true 
+                                        if holdDuration == 0 then holdDuration = 1.0 end
+                                    end
                                 end
                             end
                         end
                     end
-                end
-            end)
+                end)
 
-            if isHold then
-                _G.kidzIsHoldingSkill = true 
-                task.wait(0.2)
-                root = char:FindFirstChild("HumanoidRootPart")
-                if not root then 
+                if isHold then
+                    _G.kidzIsHoldingSkill = true 
+                    task.wait(0.2)
+                    root = char:FindFirstChild("HumanoidRootPart")
+                    if not root then 
+                        _G.kidzIsHoldingSkill = false 
+                        return 
+                    end
+                    
+                    local updateLookCF = targetPos and CFrame.lookAt(root.Position, targetV3) or root.CFrame
+                    local payloadUpdate = { 
+                        RootCF = updateLookCF, 
+                        MouseRay = fakeMousePayload.MouseRay 
+                    }
+
+                    if remote:IsA("RemoteEvent") then
+                        remote:FireServer("ClientData", "UpdateData", payloadUpdate)
+                        task.wait(holdDuration - 0.2)
+                        remote:FireServer("ClientData", "ClearData", {})
+                    elseif remote:IsA("RemoteFunction") then
+                        task.spawn(function() remote:InvokeServer("ClientData", "UpdateData", payloadUpdate) end)
+                        task.wait(holdDuration - 0.2)
+                        task.spawn(function() remote:InvokeServer("ClientData", "ClearData", {}) end)
+                    end
                     _G.kidzIsHoldingSkill = false 
-                    return 
-                end
-                
-                local updateLookCF = targetPos and CFrame.lookAt(root.Position, targetV3) or root.CFrame
-                local payloadUpdate = { 
-                    RootCF = updateLookCF, 
-                    MouseRay = fakeMousePayload.MouseRay 
-                }
-
-                if remote:IsA("RemoteEvent") then
-                    remote:FireServer("ClientData", "UpdateData", payloadUpdate)
-                    task.wait(holdDuration - 0.2)
-                    remote:FireServer("ClientData", "ClearData", {})
-                elseif remote:IsA("RemoteFunction") then
-                    task.spawn(function() remote:InvokeServer("ClientData", "UpdateData", payloadUpdate) end)
-                    task.wait(holdDuration - 0.2)
-                    task.spawn(function() remote:InvokeServer("ClientData", "ClearData", {}) end)
-                end
-                _G.kidzIsHoldingSkill = false 
-            else
-                if remote:IsA("RemoteEvent") then 
-                    remote:FireServer(fruitName, skillName, fakeMousePayload)
-                elseif remote:IsA("RemoteFunction") then 
-                    task.spawn(function() remote:InvokeServer(fruitName, skillName, fakeMousePayload) end) 
-                end
-            end
-        end)
-    end)
-end
-
--- =========================================================================
--- [หน้าหลัก] ระบบออโต้ฟาร์มสกิล
--- =========================================================================
-do
-    Tabs.Main:AddParagraph({ 
-        Title = "✨ การตั้งค่าฟาร์มสกิล", 
-        Content = "เลือก Slot ที่ต้องการฟาร์ม เพื่อให้สคริปต์ดึงข้อมูลผลไม้จากช่องนั้นโดยตรง" 
-    })
-
-    local FarmSlotDropdown = Tabs.Main:AddDropdown("FarmSlot", {
-        Title = "🎯 เลือกช่อง (Slot) ที่ต้องการฟาร์ม",
-        Values = {"1", "2", "3", "4", "5", "6", "7", "8"},
-        Multi = false,
-        Default = 1,
-    })
-
-    local FruitDropdown = Tabs.Main:AddDropdown("FruitName", { 
-        Title = "🍎 ชื่อผลไม้ (ระบบจะสแกนให้จาก Slot ที่เลือก)", 
-        Values = {"กรุณากดสแกน..."}, 
-        Multi = false, 
-        Default = 1 
-    })
-    
-    local SkillDropdown = Tabs.Main:AddDropdown("SelectedSkills", { 
-        Title = "⚔️ เลือกท่าโจมตีที่ต้องการฟาร์ม", 
-        Values = {"กรุณากดสแกน..."}, 
-        Multi = true, 
-        Default = {} 
-    })
-
-    local function getFruitNameFromSlot(slotNum)
-        local fruitName = ""
-        pcall(function()
-            local mainData = lp:FindFirstChild("MAIN_DATA")
-            if mainData and mainData:FindFirstChild("Slots") then
-                local slotVal = mainData.Slots:FindFirstChild(tostring(slotNum))
-                if slotVal and slotVal.Value ~= "" and slotVal.Value ~= "None" then
-                    fruitName = string.gsub(slotVal.Value, "%s+", "")
-                end
-            end
-        end)
-        return fruitName
-    end
-
-    local function doScanSkillsForFarmSlot(silent)
-        local targetSlot = tonumber(Options.FarmSlot.Value) or 1
-        local targetFruitName = getFruitNameFromSlot(targetSlot)
-
-        if targetFruitName == "" then
-            if not silent then 
-                KIDzUI:Notify({Title = "ระบบแจ้งเตือน", Content = "ไม่พบผลไม้ใน Slot " .. targetSlot, Duration = 5}) 
-            end
-            Options.FruitName:SetValues({"กรุณากดสแกน..."})
-            Options.SelectedSkills:SetValues({"กรุณากดสแกน..."})
-            return false
-        end
-
-        Options.FruitName:SetValues({targetFruitName})
-        Options.FruitName:SetValue(targetFruitName)
-
-        pcall(function()
-            local remote = getRemote()
-            if remote and remote:IsA("RemoteFunction") then 
-                remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlot}) 
-            end
-        end)
-        task.wait(1.5)
-
-        local foundSkills = {}
-        local rawSkills = {}
-        local dupCheck = {}
-        local blacklist = { ["Combat"] = true, ["Block"] = true, ["Dash"] = true, [""] = true, }
-        local char = getMyCharacter()
-
-        local function scanTools(parentObj)
-            if not parentObj then return end
-            for _, tool in ipairs(parentObj:GetChildren()) do
-                if tool:IsA("Tool") or tool:GetAttribute("Tool") == true then
-                    local skillRealName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool:GetAttribute("ID") or tool.Name
-                    if type(skillRealName) == "string" then 
-                        skillRealName = string.gsub(skillRealName, "%s+", "") 
+                else
+                    if remote:IsA("RemoteEvent") then 
+                        remote:FireServer(fruitName, skillName, fakeMousePayload)
+                    elseif remote:IsA("RemoteFunction") then 
+                        task.spawn(function() remote:InvokeServer(fruitName, skillName, fakeMousePayload) end) 
                     end
-                    
-                    local keyVal = tool:GetAttribute("Key") or tool:GetAttribute("Slot") or tool:GetAttribute("Hotkey")
-                    local sortKey = 999
-                    
-                    if type(keyVal) == "number" then 
-                        sortKey = keyVal
-                    elseif type(keyVal) == "string" then 
-                        local upKey = string.upper(tostring(keyVal))
-                        if upKey == "1" then sortKey = 1
-                        elseif upKey == "2" then sortKey = 2
-                        elseif upKey == "3" then sortKey = 3
-                        elseif upKey == "4" then sortKey = 4
-                        elseif upKey == "5" then sortKey = 5
-                        elseif upKey == "G" then sortKey = 6
-                        elseif upKey == "F" then sortKey = 7
-                        elseif upKey == "E" then sortKey = 8
-                        elseif upKey == "R" then sortKey = 9
-                        elseif upKey == "T" then sortKey = 10
-                        elseif upKey == "Z" then sortKey = 11
-                        elseif upKey == "X" then sortKey = 12
-                        elseif upKey == "C" then sortKey = 13
-                        elseif upKey == "V" then sortKey = 14
-                        elseif upKey == "B" then sortKey = 15
-                        else 
-                            sortKey = tonumber(keyVal) or 999 
-                        end
-                    else
-                        local numFromName = string.match(skillRealName, "%d+")
-                        if numFromName then
-                            sortKey = tonumber(numFromName)
-                        end
-                    end
-
-                    if skillRealName and not blacklist[skillRealName] and not dupCheck[skillRealName] then
-                        dupCheck[skillRealName] = true
-                        table.insert(rawSkills, { name = skillRealName, key = sortKey })
-                    end
-                end
-            end
-        end
-
-        pcall(function() 
-            scanTools(lp:FindFirstChild("Backpack")) 
-            scanTools(char) 
-        end)
-        
-        table.sort(rawSkills, function(a, b) return a.key < b.key end)
-        
-        local newSelections = {}
-        for _, entry in ipairs(rawSkills) do
-            table.insert(foundSkills, entry.name)
-            newSelections[entry.name] = true 
-        end
-        skillOrder = foundSkills
-
-        if #foundSkills > 0 then
-            Options.SelectedSkills:SetValues(foundSkills)
-            Options.SelectedSkills:SetValue(newSelections)
-            if not silent then 
-                KIDzUI:Notify({Title = "KIDz HUB", Content = "สแกนผล "..targetFruitName.." จาก Slot " .. targetSlot .. " เรียบร้อย!", Duration = 3}) 
-            end
-            return true
-        else
-            if not silent then 
-                KIDzUI:Notify({Title = "ระบบแจ้งเตือน", Content = "ไม่พบสกิล! กรุณาตรวจสอบว่าผลไม้นี้มีสกิลหรือไม่", Duration = 5}) 
-            end
-            return false
-        end
-    end
-
-    Tabs.Main:AddButton({ 
-        Title = "⚡ สแกนข้อมูลจาก Slot ที่เลือก", 
-        Callback = function() 
-            doScanSkillsForFarmSlot(false) 
-        end 
-    })
-    
-    -- [นำปุ่ม Debug กลับมาให้ครบถ้วน]
-    Tabs.Main:AddButton({
-        Title = "🧪 ทดสอบยิงสกิลปัจจุบัน (Debug)",
-        Callback = function()
-            local fruit = Options.FruitName.Value
-            local selectedSkills = Options.SelectedSkills.Value
-            local remote = getRemote()
-
-            if not remote then
-                KIDzUI:Notify({Title = "❌ Error", Content = "ไม่พบ Replicator ในเกม!", Duration = 4})
-                return
-            end
-
-            if isPlaceholder(fruit) then
-                KIDzUI:Notify({Title = "❌ Error", Content = "กรุณาสแกนและเลือกผลไม้ก่อน!", Duration = 4})
-                return
-            end
-
-            local count = 0
-            for skillName, isEnabled in pairs(selectedSkills or {}) do
-                if isEnabled and not isPlaceholder(skillName) then
-                    pcall(function() fireSkill(fruit, skillName, nil, 0.5) end)
-                    count = count + 1
-                end
-            end
-
-            if count == 0 then
-                KIDzUI:Notify({Title = "⚠️ Debug", Content = "ไม่มีสกิลที่เลือกอยู่ หรือยังไม่ได้สแกน", Duration = 4})
-            else
-                KIDzUI:Notify({Title = "🧪 Debug", Content = "สั่งยิงไปทั้งหมด " .. count .. " สกิล", Duration = 5})
-            end
-        end
-    })
-
-    Tabs.Main:AddButton({ Title = "🔄 ล้างค่าเริ่มต้น (Reset UI)", Callback = function() 
-        Options.FruitName:SetValues({"กรุณากดสแกน..."}) 
-        Options.SelectedSkills:SetValues({"กรุณากดสแกน..."}) 
-        Options.SelectedSkills:SetValue({}) 
-        Options.AutoCombo:SetValue(false) 
-    end })
-
-    local SpamDelay = Tabs.Main:AddSlider("SpamDelay", { 
-        Title = "⏱️ ความหน่วงในการวนรอบสกิล (วินาที)", 
-        Default = 1.0, 
-        Min = 0.05, 
-        Max = 3.0, 
-        Rounding = 2 
-    })
-    
-    local AutoComboToggle = Tabs.Main:AddToggle("AutoCombo", { 
-        Title = "▶️ เปิดใช้งานระบบโจมตีอัตโนมัติ (Auto Cast)", 
-        Default = false 
-    })
-
-    task.spawn(function()
-        local lastToolCount = -1
-        while true do
-            task.wait(0.5)
-
-            if Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true then 
-                continue 
-            end
-            
-            if not (Options.AutoScan and Options.AutoScan.Value == true) then
-                lastToolCount = -1 
-                continue
-            end
-
-            local currentChar = getMyCharacter()
-            if currentChar then
-                local bp = lp:FindFirstChild("Backpack")
-                if bp then
-                    local currentCount = 0
-                    for _, v in ipairs(bp:GetChildren()) do 
-                        if v:IsA("Tool") or v:GetAttribute("Tool") == true then 
-                            currentCount = currentCount + 1 
-                        end 
-                    end
-                    for _, v in ipairs(currentChar:GetChildren()) do 
-                        if v:IsA("Tool") or v:GetAttribute("Tool") == true then 
-                            currentCount = currentCount + 1 
-                        end 
-                    end
-
-                    if lastToolCount ~= -1 and currentCount ~= lastToolCount then
-                        doScanSkillsForFarmSlot(true) 
-                    end
-                    lastToolCount = currentCount
-                end
-            end
-        end
-    end)
-
-    task.spawn(function()
-        while true do
-            task.wait(0.05)
-            
-            if _G.isFightingBoss or (Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true) then 
-                continue 
-            end
-            
-            if not (Options.AutoCombo and Options.AutoCombo.Value == true) then 
-                continue 
-            end
-
-            local char = getMyCharacter()
-            local hum = char and char:FindFirstChild("Humanoid")
-            if not (char and hum and hum.Health > 0) then 
-                continue 
-            end
-
-            local fruit = Options.FruitName.Value
-            if isPlaceholder(fruit) then 
-                continue 
-            end
-            
-            local selectedSkills = Options.SelectedSkills.Value
-            if type(selectedSkills) ~= "table" or #skillOrder == 0 then 
-                continue 
-            end
-
-            local targetSlot = tonumber(Options.FarmSlot.Value) or 1
-            local md = lp:FindFirstChild("MAIN_DATA")
-            if md then
-                local curSlot = md:FindFirstChild("Slot") and md.Slot.Value
-                if curSlot ~= targetSlot then
-                    pcall(function()
-                        local remote = getRemote()
-                        if remote and remote:IsA("RemoteFunction") then 
-                            remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlot}) 
-                        end
-                    end)
-                    task.wait(1)
-                    continue
-                end
-            end
-
-            local delayTime = (Options.SpamDelay and Options.SpamDelay.Value) or 1.0
-            local firedAny = false
-            
-            if _G.kidzIsHoldingSkill then 
-                continue 
-            end
-            
-            local currentRage = getRage()
-            local tCD = 0
-            pcall(function()
-                local cdFolder = lp:FindFirstChild("Cooldowns")
-                if cdFolder and cdFolder:FindFirstChild("Transform") then 
-                    tCD = cdFolder.Transform.Value or 0 
                 end
             end)
-            
-            if currentRage < 5 and tCD > 0 then
-                cancelAllAnimations()
-                task.wait(1.5)
-                continue
+        end)
+    end
+
+    -- =========================================================================
+    -- [หน้าหลัก] ระบบออโต้ฟาร์มสกิล
+    -- =========================================================================
+    do
+        Tabs.Main:AddParagraph({ 
+            Title = "✨ การตั้งค่าฟาร์มสกิล", 
+            Content = "เปิด Auto Scan ระบบจะจับตาผลไม้ที่กี่อยู่ใน Slot ที่ถือไว้โดยอัตโนมัติ" 
+        })
+
+        Tabs.Main:AddToggle("AutoScan", { 
+            Title = "🔍 เปิดใช้งานระบบ Auto Scan (จำผลไม้มือ)", 
+            Default = false 
+        })
+
+        local FarmSlotDropdown = Tabs.Main:AddDropdown("FarmSlot", {
+            Title = "🎯 เลือกช่อง (Slot) ที่ต้องการฟาร์ม",
+            Values = {"1", "2", "3", "4", "5", "6", "7", "8"},
+            Multi = false,
+            Default = 1,
+        })
+
+        local FruitDropdown = Tabs.Main:AddDropdown("FruitName", { 
+            Title = "🍎 ชื่อผลไม้", 
+            Values = {"กรุณาเปิด Auto Scan..."}, 
+            Multi = false, 
+            Default = 1 
+        })
+        
+        local SkillDropdown = Tabs.Main:AddDropdown("SelectedSkills", { 
+            Title = "⚔️ เลือกท่าโจมตีที่ต้องการฟาร์ม", 
+            Values = {"กรุณากดสแกน..."}, 
+            Multi = true, 
+            Default = {} 
+        })
+
+        local function getFruitNameFromSlot(slotNum)
+            local fruitName = ""
+            pcall(function()
+                local mainData = lp:FindFirstChild("MAIN_DATA")
+                if mainData and mainData:FindFirstChild("Slots") then
+                    local slotVal = mainData.Slots:FindFirstChild(tostring(slotNum))
+                    if slotVal and slotVal.Value ~= "" and slotVal.Value ~= "None" then
+                        fruitName = string.gsub(slotVal.Value, "%s+", "")
+                    end
+                end
+            end)
+            return fruitName
+        end
+
+        local function doScanSkillsForFarmSlot(silent)
+        local targetSlot = tonumber(Options.FarmSlot.Value) or 1
+
+    -- ถ้า AutoScan เปิด → อ่าน Slot จริงจาก MAIN_DATA.Slot
+    if Options.AutoScan and Options.AutoScan.Value == true then
+        pcall(function()
+            local md = lp:FindFirstChild("MAIN_DATA")
+            if md and md:FindFirstChild("Slot") then
+                local realSlot = md.Slot.Value
+                if type(realSlot) == "number" and realSlot >= 1 then
+                    targetSlot = realSlot
+                    -- sync Dropdown ให้ตรงกับ Slot จริง
+                    pcall(function() Options.FarmSlot:SetValue(tostring(realSlot)) end)
+                end
+            end
+        end)
+    end
+
+    local targetFruitName = getFruitNameFromSlot(targetSlot)
+
+    if targetFruitName == "" then
+                if not silent then 
+                    KIDzUI:Notify({Title = "ระบบแจ้งเตือน", Content = "ไม่พบผลไม้ใน Slot " .. targetSlot, Duration = 5}) 
+                end
+                Options.FruitName:SetValues({"กรุณากดสแกน..."})
+                Options.SelectedSkills:SetValues({"กรุณากดสแกน..."})
+                return false
             end
 
-            for _, skillName in ipairs(skillOrder) do
-                if selectedSkills[skillName] == true and not isPlaceholder(skillName) then
-                    local isAwakeningSkill = (skillName == "Transform" or skillName == "KROOM" or skillName == "Awakening" or skillName == "Rage")
-                    if isAwakeningSkill and currentRage < 100 then 
-                        continue 
-                    end
+            Options.FruitName:SetValues({targetFruitName})
+            Options.FruitName:SetValue(targetFruitName)
 
-                    local isOnCooldown = false
+            pcall(function()
+                local remote = getRemote()
+                if remote and remote:IsA("RemoteFunction") then 
+                    remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlot}) 
+                end
+            end)
+            task.wait(1.5)
+
+            local foundSkills = {}
+            local rawSkills = {}
+            local dupCheck = {}
+            local blacklist = { ["Combat"] = true, ["Block"] = true, ["Dash"] = true, [""] = true, }
+            local char = getMyCharacter()
+
+            local function scanTools(parentObj)
+                if not parentObj then return end
+                for _, tool in ipairs(parentObj:GetChildren()) do
+                    if tool:IsA("Tool") or tool:GetAttribute("Tool") == true then
+                        local skillRealName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool:GetAttribute("ID") or tool.Name
+                        if type(skillRealName) == "string" then 
+                            skillRealName = string.gsub(skillRealName, "%s+", "") 
+                        end
+                        
+                        local keyVal = tool:GetAttribute("Key") or tool:GetAttribute("Slot") or tool:GetAttribute("Hotkey")
+                        local sortKey = 999
+                        
+                        if type(keyVal) == "number" then 
+                            sortKey = keyVal
+                        elseif type(keyVal) == "string" then 
+                            local upKey = string.upper(tostring(keyVal))
+                            if upKey == "1" then sortKey = 1
+                            elseif upKey == "2" then sortKey = 2
+                            elseif upKey == "3" then sortKey = 3
+                            elseif upKey == "4" then sortKey = 4
+                            elseif upKey == "5" then sortKey = 5
+                            elseif upKey == "G" then sortKey = 6
+                            elseif upKey == "F" then sortKey = 7
+                            elseif upKey == "E" then sortKey = 8
+                            elseif upKey == "R" then sortKey = 9
+                            elseif upKey == "T" then sortKey = 10
+                            elseif upKey == "Z" then sortKey = 11
+                            elseif upKey == "X" then sortKey = 12
+                            elseif upKey == "C" then sortKey = 13
+                            elseif upKey == "V" then sortKey = 14
+                            elseif upKey == "B" then sortKey = 15
+                            else 
+                                sortKey = tonumber(keyVal) or 999 
+                            end
+                        else
+                            local numFromName = string.match(skillRealName, "%d+")
+                            if numFromName then
+                                sortKey = tonumber(numFromName)
+                            end
+                        end
+
+                        if skillRealName and not blacklist[skillRealName] and not dupCheck[skillRealName] then
+                            dupCheck[skillRealName] = true
+                            table.insert(rawSkills, { name = skillRealName, key = sortKey })
+                        end
+                    end
+                end
+            end
+
+            pcall(function() 
+                scanTools(lp:FindFirstChild("Backpack")) 
+                scanTools(char) 
+            end)
+            
+            table.sort(rawSkills, function(a, b) return a.key < b.key end)
+            
+            local newSelections = {}
+            for _, entry in ipairs(rawSkills) do
+                table.insert(foundSkills, entry.name)
+                newSelections[entry.name] = true 
+            end
+            skillOrder = foundSkills
+
+            if #foundSkills > 0 then
+                Options.SelectedSkills:SetValues(foundSkills)
+                Options.SelectedSkills:SetValue(newSelections)
+                if not silent then 
+                    KIDzUI:Notify({Title = "KIDz HUB", Content = "สแกนผล "..targetFruitName.." จาก Slot " .. targetSlot .. " เรียบร้อย!", Duration = 3}) 
+                end
+                return true
+            else
+                if not silent then 
+                    KIDzUI:Notify({Title = "ระบบแจ้งเตือน", Content = "ไม่พบสกิล! กรุณาตรวจสอบว่าผลไม้นี้มีสกิลหรือไม่", Duration = 5}) 
+                end
+                return false
+            end
+        end
+
+        Tabs.Main:AddButton({ 
+            Title = "⚡ สแกนข้อมูลจาก Slot ที่เลือก", 
+            Callback = function() 
+                doScanSkillsForFarmSlot(false) 
+            end 
+        })
+        
+        -- [นำปุ่ม Debug กลับมาให้ครบถ้วน]
+        Tabs.Main:AddButton({
+            Title = "🧪 ทดสอบยิงสกิลปัจจุบัน (Debug)",
+            Callback = function()
+                local fruit = Options.FruitName.Value
+                local selectedSkills = Options.SelectedSkills.Value
+                local remote = getRemote()
+
+                if not remote then
+                    KIDzUI:Notify({Title = "❌ Error", Content = "ไม่พบ Replicator ในเกม!", Duration = 4})
+                    return
+                end
+
+                if isPlaceholder(fruit) then
+                    KIDzUI:Notify({Title = "❌ Error", Content = "กรุณาสแกนและเลือกผลไม้ก่อน!", Duration = 4})
+                    return
+                end
+
+                local count = 0
+                for skillName, isEnabled in pairs(selectedSkills or {}) do
+                    if isEnabled and not isPlaceholder(skillName) then
+                        pcall(function() fireSkill(fruit, skillName, nil, 0.5) end)
+                        count = count + 1
+                    end
+                end
+
+                if count == 0 then
+                    KIDzUI:Notify({Title = "⚠️ Debug", Content = "ไม่มีสกิลที่เลือกอยู่ หรือยังไม่ได้สแกน", Duration = 4})
+                else
+                    KIDzUI:Notify({Title = "🧪 Debug", Content = "สั่งยิงไปทั้งหมด " .. count .. " สกิล", Duration = 5})
+                end
+            end
+        })
+
+        Tabs.Main:AddButton({ Title = "🔄 ล้างค่าเริ่มต้น (Reset UI)", Callback = function() 
+            Options.FruitName:SetValues({"กรุณากดสแกน..."}) 
+            Options.SelectedSkills:SetValues({"กรุณากดสแกน..."}) 
+            Options.SelectedSkills:SetValue({}) 
+            Options.AutoCombo:SetValue(false) 
+        end })
+
+        local SpamDelay = Tabs.Main:AddSlider("SpamDelay", { 
+            Title = "⏱️ ความหน่วงในการวนรอบสกิล (วินาที)", 
+            Default = 1.0, 
+            Min = 0.05, 
+            Max = 3.0, 
+            Rounding = 2 
+        })
+        
+        local AutoComboToggle = Tabs.Main:AddToggle("AutoCombo", { 
+            Title = "▶️ เปิดใช้งานระบบโจมตีอัตโนมัติ (Auto Cast)", 
+            Default = false 
+        })
+
+        -- Sync FarmSlot Dropdown ให้ตรงกับ Slot จริงเสมอเมื่อ AutoScan เปิด
+        task.spawn(function()
+            while task.wait(1) do
+                if Options.AutoScan and Options.AutoScan.Value == true then
                     pcall(function()
-                        local cdFolder = lp:FindFirstChild("Cooldowns")
-                        if cdFolder and cdFolder:FindFirstChild(skillName) then
-                            if type(cdFolder[skillName].Value) == "number" and cdFolder[skillName].Value > 0 then 
-                                isOnCooldown = true 
+                        local md = lp:FindFirstChild("MAIN_DATA")
+                        if md and md:FindFirstChild("Slot") then
+                            local realSlot = tostring(md.Slot.Value)
+                            if Options.FarmSlot.Value ~= realSlot then
+                                Options.FarmSlot:SetValue(realSlot)
                             end
                         end
                     end)
+                end
+            end
+        end)
 
-                    if isOnCooldown then 
+        task.spawn(function()
+            local lastToolCount = -1
+            local lastSlot = -1
+            while true do
+                task.wait(0.5)
+
+                if Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true then
+                    continue
+                end
+
+                if not (Options.AutoScan and Options.AutoScan.Value == true) then
+                    lastToolCount = -1
+                    lastSlot = -1
+                    continue
+                end
+
+                local currentChar = getMyCharacter()
+                if currentChar then
+                    local bp = lp:FindFirstChild("Backpack")
+                    if bp then
+                        local currentSlot = -1
+                        pcall(function()
+                            local md = lp:FindFirstChild("MAIN_DATA")
+                            if md and md:FindFirstChild("Slot") then
+                                currentSlot = md.Slot.Value
+                            end
+                        end)
+
+                        local currentCount = 0
+                        for _, v in ipairs(bp:GetChildren()) do
+                            if v:IsA("Tool") or v:GetAttribute("Tool") == true then
+                                currentCount = currentCount + 1
+                            end
+                        end
+                        for _, v in ipairs(currentChar:GetChildren()) do
+                            if v:IsA("Tool") or v:GetAttribute("Tool") == true then
+                                currentCount = currentCount + 1
+                            end
+                        end
+
+                        local slotChanged = (currentSlot ~= -1 and currentSlot ~= lastSlot)
+                        local toolCountChanged = (currentCount ~= lastToolCount)
+
+                        if lastToolCount == -1 then
+                            doScanSkillsForFarmSlot(false)
+                        elseif slotChanged then
+                            KIDzUI:Notify({Title = "🔄 เปลี่ยน Slot", Content = "ตรวจพบ Slot " .. currentSlot .. " กำลังสแกนสกิลใหม่...", Duration = 3})
+                            doScanSkillsForFarmSlot(false)
+                        elseif toolCountChanged then
+                            doScanSkillsForFarmSlot(true)
+                        end
+
+                        lastToolCount = currentCount
+                        if currentSlot ~= -1 then lastSlot = currentSlot end
+                    end
+                end
+            end
+        end)
+
+        task.spawn(function()
+            while true do
+                task.wait(0.05)
+                
+                if _G.isFightingBoss or (Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true) then 
+                    continue 
+                end
+                
+                if not (Options.AutoCombo and Options.AutoCombo.Value == true) then 
+                    continue 
+                end
+
+                local char = getMyCharacter()
+                local hum = char and char:FindFirstChild("Humanoid")
+                if not (char and hum and hum.Health > 0) then 
+                    continue 
+                end
+
+                local fruit = Options.FruitName.Value
+                if isPlaceholder(fruit) then 
+                    continue 
+                end
+                
+                local selectedSkills = Options.SelectedSkills.Value
+                if type(selectedSkills) ~= "table" or #skillOrder == 0 then 
+                    continue 
+                end
+
+                local targetSlot = tonumber(Options.FarmSlot.Value) or 1
+                local md = lp:FindFirstChild("MAIN_DATA")
+                if md then
+                    local curSlot = md:FindFirstChild("Slot") and md.Slot.Value
+                    if curSlot ~= targetSlot then
+                        pcall(function()
+                            local remote = getRemote()
+                            if remote and remote:IsA("RemoteFunction") then 
+                                remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlot}) 
+                            end
+                        end)
+                        task.wait(1)
+                        continue
+                    end
+                end
+
+                local delayTime = (Options.SpamDelay and Options.SpamDelay.Value) or 1.0
+                local firedAny = false
+                
+                if _G.kidzIsHoldingSkill then 
+                    continue 
+                end
+                
+                local currentRage = getRage()
+                local tCD = 0
+                pcall(function()
+                    local cdFolder = lp:FindFirstChild("Cooldowns")
+                    if cdFolder and cdFolder:FindFirstChild("Transform") then 
+                        tCD = cdFolder.Transform.Value or 0 
+                    end
+                end)
+                
+                if currentRage < 5 and tCD > 0 then
+                    cancelAllAnimations()
+                    task.wait(1.5)
+                    continue
+                end
+
+                for _, skillName in ipairs(skillOrder) do
+                    if selectedSkills[skillName] == true and not isPlaceholder(skillName) then
+                        local isAwakeningSkill = (skillName == "Transform" or skillName == "KROOM" or skillName == "Awakening" or skillName == "Rage")
+                        if isAwakeningSkill and currentRage < 100 then 
+                            continue 
+                        end
+
+                        local isOnCooldown = false
+                        pcall(function()
+                            local cdFolder = lp:FindFirstChild("Cooldowns")
+                            if cdFolder and cdFolder:FindFirstChild(skillName) then
+                                if type(cdFolder[skillName].Value) == "number" and cdFolder[skillName].Value > 0 then 
+                                    isOnCooldown = true 
+                                end
+                            end
+                        end)
+
+                        if isOnCooldown then 
+                            continue 
+                        end
+
+                        local targetToShoot = nil
+                        if Options.CombatAimbot and Options.CombatAimbot.Value then
+                            local radius = Options.AimbotRadius and Options.AimbotRadius.Value or 100
+                            local closestPlayer = nil
+                            local shortestDist = radius
+                            local charsFolder = workspace:FindFirstChild("Characters")
+                            local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
+
+                            if playersFolder then
+                                for _, enemyModel in ipairs(playersFolder:GetChildren()) do
+                                    if enemyModel.Name ~= lp.Name and enemyModel:FindFirstChild("HumanoidRootPart") and enemyModel:FindFirstChild("Humanoid") and enemyModel.Humanoid.Health > 0 then
+                                        local dist = (char.HumanoidRootPart.Position - enemyModel.HumanoidRootPart.Position).Magnitude
+                                        if dist < shortestDist then
+                                            shortestDist = dist
+                                            closestPlayer = enemyModel
+                                        end
+                                    end
+                                end
+                            end
+                            if closestPlayer then 
+                                targetToShoot = closestPlayer.HumanoidRootPart.Position 
+                            end
+                        end
+
+                        fireSkill(fruit, skillName, targetToShoot, delayTime)
+                        firedAny = true
+                        if isAwakeningSkill then 
+                            task.wait(2.5) 
+                        else 
+                            task.wait(delayTime) 
+                        end
+                    end
+                end
+                if not firedAny then 
+                    task.wait(0.5) 
+                end
+            end
+        end)
+    end
+
+    -- =========================================================================
+    -- [หน้าสุ่มผล] ระบบ Auto Spin & Inventory อัจฉริยะ 
+    -- =========================================================================
+    do
+        local MyFruitsList = Tabs.Spin:AddParagraph({ 
+            Title = "🎒 ผลไม้ในกระเป๋าของคุณ", 
+            Content = "กำลังโหลดข้อมูล..." 
+        })
+        
+        local SpinStatsLabel = Tabs.Spin:AddParagraph({ 
+            Title = "📊 สถานะการสุ่ม (Real-time)", 
+            Content = "กำลังดึงข้อมูลจากเซิร์ฟเวอร์..." 
+        })
+
+        task.spawn(function()
+            while task.wait(0.5) do
+                pcall(function()
+                    local mainData = lp:FindFirstChild("MAIN_DATA")
+                    if not mainData then return end
+
+                    local slotsText = ""
+                    local currentSlotNum = mainData:FindFirstChild("Slot") and mainData.Slot.Value or 1
+                    local slotsFolder = mainData:FindFirstChild("Slots")
+                    
+                    if slotsFolder then
+                        local maxSlots = #slotsFolder:GetChildren()
+                        for i = 1, maxSlots do
+                            local slotVal = slotsFolder:FindFirstChild(tostring(i))
+                            if slotVal and slotVal.Value ~= "" and slotVal.Value ~= "None" then
+                                local mark = (i == currentSlotNum) and "✅ (กำลังใส่)" or ""
+                                slotsText = slotsText .. "Slot " .. i .. ": " .. slotVal.Value .. " " .. mark .. "\n"
+                            end
+                        end
+                    end
+                    
+                    if slotsText == "" then 
+                        slotsText = "ไม่พบผลไม้ในกระเป๋า" 
+                    end
+                    MyFruitsList:SetDesc(slotsText)
+
+                    local gems = mainData:FindFirstChild("Gems") and mainData.Gems.Value or 0
+                    local rText, eText, lText, timerStr = "0/80", "0/160", "0/800", "00:00:00"
+
+                    local gui = lp:FindFirstChild("PlayerGui")
+                    local spinUI = gui and gui:FindFirstChild("UI") and gui.UI:FindFirstChild("Spin")
+                    
+                    if spinUI then
+                        local rpNode = spinUI:FindFirstChild("RarePity") 
+                        if rpNode and rpNode.Text ~= "" then rText = rpNode.Text end
+                        
+                        local epNode = spinUI:FindFirstChild("EpicPity") 
+                        if epNode and epNode.Text ~= "" then eText = epNode.Text end
+                        
+                        local lpNode = spinUI:FindFirstChild("LegendaryPity") 
+                        if lpNode and lpNode.Text ~= "" then lText = lpNode.Text end
+                        
+                        local tNode = spinUI:FindFirstChild("PityTimer") 
+                        if tNode and tNode.Text ~= "" then timerStr = tNode.Text end
+                    end
+
+                    SpinStatsLabel:SetDesc(
+                        "💎 เพชร: " .. tostring(gems) .. "\n" ..
+                        "🟢 Rare Pity: " .. rText .. "\n" ..
+                        "🟣 Epic Pity: " .. eText .. "\n" ..
+                        "🟡 Legend Pity: " .. lText .. "\n" ..
+                        "🔄 รีเซ็ตใน: " .. timerStr
+                    )
+                end)
+            end
+        end)
+
+        Tabs.Spin:AddParagraph({ 
+            Title = "🎰 ระบบสุ่มผลอัตโนมัติ", 
+            Content = "เลือกช่องที่จะสุ่ม และระดับ/ผลที่ต้องการ" 
+        })
+
+        Tabs.Spin:AddDropdown("SpinTargetSlot", {
+            Title = "🎯 เลือกช่อง (Slot) สุ่มผล",
+            Values = {"1", "2", "3", "4", "5", "6", "7", "8"},
+            Multi = false,
+            Default = 1,
+        })
+
+        Tabs.Spin:AddDropdown("SpinTargetRarity", {
+            Title = "🎯 หยุดสุ่มเมื่อได้ระดับ",
+            Values = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"},
+            Multi = false,
+            Default = 4,
+        })
+
+        local allFruitNames = {"ไม่ระบุ (สุ่มตามระดับแทน)"}
+for fruitName, _ in pairs(FruitDB_Fallback) do
+    table.insert(allFruitNames, fruitName)
+end
+table.sort(allFruitNames, function(a, b)
+    if a == "ไม่ระบุ (สุ่มตามระดับแทน)" then return true end
+    if b == "ไม่ระบุ (สุ่มตามระดับแทน)" then return false end
+    return a < b
+end)
+
+Tabs.Spin:AddDropdown("SpinTargetFruit", {
+    Title = "🍎 หยุดเมื่อได้ผลนี้ (เจาะจง)",
+    Values = allFruitNames,
+    Multi = false,
+    Default = 1,
+})
+
+        Tabs.Spin:AddDropdown("ProtectRarity", {
+            Title = "🛡️ เลือกระดับป้องกัน (กันสุ่มทิ้ง)",
+            Values = {"Rare", "Epic", "Legendary", "Mythic"},
+            Multi = true,
+            Default = {"Legendary", "Mythic"},
+        })
+
+        Tabs.Spin:AddToggle("ProtectToggle", { Title = "🛡️ เปิดระบบป้องกันผลแรร์หาย", Default = true })
+        Tabs.Spin:AddToggle("AutoSpinToggle", { Title = "🎰 เปิดใช้งาน Auto Spin", Default = false })
+
+        task.spawn(function()
+            while task.wait(0.5) do
+                if Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true then
+                    
+                    local remote = getRemote()
+                    local md = lp:FindFirstChild("MAIN_DATA")
+                    if not remote or not md then 
                         continue 
                     end
 
-                    local targetToShoot = nil
-                    if Options.CombatAimbot and Options.CombatAimbot.Value then
-                        local radius = Options.AimbotRadius and Options.AimbotRadius.Value or 100
-                        local closestPlayer = nil
-                        local shortestDist = radius
+                    local targetSlotToSpin = tonumber(Options.SpinTargetSlot.Value) or 1
+                    local curSlot = md:FindFirstChild("Slot") and md.Slot.Value
+
+                    -- 1. สลับไปช่องเป้าหมายที่จะสุ่ม
+                    if curSlot ~= targetSlotToSpin then
+                        pcall(function() 
+                            remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlotToSpin}) 
+                        end)
+                        task.wait(1.5) 
+                    end
+                    
+                    -- 2. ระบบป้องกันผลแรร์หาย
+                    if Options.ProtectToggle and Options.ProtectToggle.Value == true then
+                        if md:FindFirstChild("Slots") then
+                            local slotVal = md.Slots:FindFirstChild(tostring(targetSlotToSpin))
+                            if slotVal and slotVal.Value ~= "None" and slotVal.Value ~= "" then
+                                local curFruit = string.gsub(slotVal.Value, "%s+", "")
+                                local curRarity = getFruitRarity(curFruit) 
+                                
+                                local protectedRarities = Options.ProtectRarity.Value or {}
+                                local isProtected = false
+                                
+                                if curRarity == 99 then 
+                                    isProtected = true
+                                else
+                                    for rarityStr, isEnabled in pairs(protectedRarities) do
+                                        if isEnabled and RarityMap[rarityStr] == curRarity then
+                                            isProtected = true 
+                                            break
+                                        end
+                                    end
+                                end
+
+                                if isProtected then 
+                                    Options.AutoSpinToggle:SetValue(false)
+                                    KIDzUI:Notify({Title="⚠️ ระบบป้องกันทำงาน!", Content="ช่องที่ " .. targetSlotToSpin .. " มีผล "..curFruit.." (ห้ามสุ่มทิ้ง)", Duration=10})
+                                    continue
+                                end
+                            end
+                        end
+                    end
+
+                    -- 3. ทำการสุ่ม
+                    if remote:IsA("RemoteFunction") then
+                        task.wait(1.5) 
+                        local ok, result = pcall(function() return remote:InvokeServer("FruitsHandler", "Spin", {}) end)
+                        
+                        if ok and result then
+                            local spunName, spunRarity = "Unknown", 1
+                            if type(result) == "string" then
+                                spunName = result
+                                spunRarity = getFruitRarity(result)
+                            elseif type(result) == "table" then
+                                spunName = result.Fruit or result.Name or "Unknown"
+                                local rarStr = result.Rarity or "Common"
+                                spunRarity = RarityMap[rarStr] or getFruitRarity(spunName)
+                            end
+
+                            local targetRarity = RarityMap[Options.SpinTargetRarity.Value] or 4
+                            local targetFruit = Options.SpinTargetFruit.Value
+
+                            local shouldStop = false
+                            if spunRarity >= targetRarity then 
+                                shouldStop = true 
+                            end
+                            if targetFruit ~= "ไม่ระบุ (สุ่มตามระดับแทน)" and spunName == targetFruit then 
+                                shouldStop = true 
+                            end
+
+                            if shouldStop then
+                                Options.AutoSpinToggle:SetValue(false)
+                                KIDzUI:Notify({Title="🎉 สุ่มสำเร็จ!", Content="ได้รับผล: " .. spunName .. "\nสคริปต์หยุดสุ่มแล้ว", Duration=15})
+                                
+                                -- 🔧 FIX: กลับไป Slot ที่ใช้ฟาร์มและ Rescan
+                                task.spawn(function()
+                                    task.wait(2)
+                                    
+                                    local farmSlot = tonumber(Options.FarmSlot.Value) or 1
+                                    local remote = getRemote()
+                                    
+                                    -- 🔧 FIX: ปิด AutoScan ชั่วคราว เพื่อกัน doScan อ่าน Slot ผิด
+                                    local wasAutoScan = Options.AutoScan and Options.AutoScan.Value
+                                    if wasAutoScan then
+                                        pcall(function() Options.AutoScan:SetValue(false) end)
+                                    end
+                                    
+                                    task.wait(0.3)
+                                    
+                                    -- บังคับ set FarmSlot dropdown ให้ตรง
+                                    pcall(function() Options.FarmSlot:SetValue(tostring(farmSlot)) end)
+                                    
+                                    task.wait(0.3)
+                                    
+                                    -- สลับกลับไป Slot ที่ฟาร์ม
+                                    if remote and remote:IsA("RemoteFunction") then
+                                        pcall(function()
+                                            remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = farmSlot})
+                                        end)
+                                    end
+                                    
+                                    task.wait(2) -- รอให้ Slot สลับเสร็จสนิท
+                                    
+                                    -- Rescan สกิลจาก Slot ฟาร์ม (ตอนนี้ AutoScan ปิดอยู่ จะอ่าน FarmSlot ได้ถูก)
+                                    doScanSkillsForFarmSlot(false)
+                                    
+                                    task.wait(0.5)
+                                    
+                                    -- เปิด AutoScan คืน ถ้าเปิดอยู่ก่อนหน้า
+                                    if wasAutoScan then
+                                        pcall(function() Options.AutoScan:SetValue(true) end)
+                                    end
+                                    
+                                    KIDzUI:Notify({
+                                        Title="🔄 กลับ Slot ฟาร์ม",
+                                        Content="กลับมา Slot " .. farmSlot .. " (Darkness) และสแกนสกิลใหม่แล้ว!",
+                                        Duration=4
+                                    })
+                                end)
+                            else
+                                KIDzUI:Notify({Title="🎰 หมุนตู้สุ่ม...", Content="ได้รับผล: " .. spunName .. " (กำลังสุ่มต่อ...)", Duration=2})
+                            end
+                            task.wait(3.5)
+                        else
+                            Options.AutoSpinToggle:SetValue(false)
+                            KIDzUI:Notify({Title="❌ หยุดสุ่มอัตโนมัติ", Content="เซิร์ฟเวอร์ไม่ตอบสนอง หรือ เงิน/เพชรหมด!", Duration=5})
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    -- =========================================================================
+    -- [หน้าต่อสู้ PvP] ระบบ Combat อัจฉริยะ (ESP, Aimbot)
+    -- =========================================================================
+    do
+        Tabs.Combat:AddParagraph({ Title = "⚔️ ระบบช่วยต่อสู้ (Combat Assist)", Content = "ล็อคเป้าหมายผู้เล่นอื่น และระบบมองทะลุกำแพง (ESP)" })
+
+        Tabs.Combat:AddToggle("ESPToggle", { Title = "👁️ เปิดใช้งาน ESP (มองทะลุกำแพง)", Default = false })
+        Tabs.Combat:AddToggle("ESPHighlight", { Title = "🟥 แสดงกรอบสีแดงรอบตัว (Chams)", Default = true })
+        Tabs.Combat:AddToggle("ESPName", { Title = "🏷️ แสดงชื่อและระยะห่าง (Names)", Default = true })
+
+        task.spawn(function()
+            while task.wait(0.1) do
+                pcall(function()
+                    local myChar = getMyCharacter()
+                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    local charsFolder = workspace:FindFirstChild("Characters")
+                    local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
+
+                    if playersFolder then
+                        for _, enemyModel in ipairs(playersFolder:GetChildren()) do
+                            if enemyModel.Name ~= lp.Name then
+                                local hl = enemyModel:FindFirstChild("KIDzESP_HL")
+                                if Options.ESPToggle and Options.ESPToggle.Value and Options.ESPHighlight and Options.ESPHighlight.Value then
+                                    if not hl then
+                                        hl = Instance.new("Highlight") 
+                                        hl.Name = "KIDzESP_HL" 
+                                        hl.FillColor = Color3.fromRGB(255, 0, 0)
+                                        hl.OutlineColor = Color3.fromRGB(255, 255, 255) 
+                                        hl.FillTransparency = 0.5 
+                                        hl.OutlineTransparency = 0
+                                        hl.Parent = enemyModel
+                                    end
+                                else
+                                    if hl then hl:Destroy() end
+                                end
+
+                                local enemyRoot = enemyModel:FindFirstChild("HumanoidRootPart")
+                                local bb = enemyModel:FindFirstChild("KIDzESP_BB")
+                                
+                                if Options.ESPToggle and Options.ESPToggle.Value and Options.ESPName and Options.ESPName.Value and enemyRoot then
+                                    if not bb then
+                                        bb = Instance.new("BillboardGui") 
+                                        bb.Name = "KIDzESP_BB" 
+                                        bb.Size = UDim2.new(0, 200, 0, 50)
+                                        bb.StudsOffset = Vector3.new(0, 3, 0) 
+                                        bb.AlwaysOnTop = true
+                                        
+                                        local txt = Instance.new("TextLabel", bb) 
+                                        txt.Size = UDim2.new(1, 0, 1, 0)
+                                        txt.BackgroundTransparency = 1 
+                                        txt.TextColor3 = Color3.fromRGB(255, 255, 255)
+                                        txt.TextStrokeTransparency = 0 
+                                        txt.Font = Enum.Font.Code 
+                                        txt.TextSize = 14
+                                        
+                                        bb.Parent = enemyModel
+                                    end
+                                    if myRoot then
+                                        local dist = math.floor((myRoot.Position - enemyRoot.Position).Magnitude)
+                                        bb.TextLabel.Text = enemyModel.Name .. " [" .. dist .. "m]"
+                                    end
+                                else
+                                    if bb then bb:Destroy() end
+                                end
+                            end
+                        end
+                    end
+                end)
+            end
+        end)
+
+        Tabs.Combat:AddToggle("CombatAimbot", { Title = "🎯 เปิดใช้งานระบบล็อคเป้าหมาย (Camlock)", Default = false })
+        Tabs.Combat:AddKeybind("AimbotKey", { Title = "คีย์ลัดเปิด/ปิด ล็อคเป้า", Mode = "Toggle", Default = "Q", Callback = function(Value) Options.CombatAimbot:SetValue(Value) end })
+        Tabs.Combat:AddSlider("AimbotRadius", { Title = "📏 ระยะค้นหาเป้าหมาย (Studs)", Default = 100, Min = 10, Max = 500, Rounding = 0 })
+
+        local cachedAimbotTarget = nil
+        task.spawn(function()
+            while task.wait(0.1) do
+                if Options.CombatAimbot and Options.CombatAimbot.Value then
+                    local radius = Options.AimbotRadius and Options.AimbotRadius.Value or 100
+                    local closestPlayer = nil
+                    local shortestDist = radius
+                    local myChar = getMyCharacter()
+                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    
+                    if myRoot then
                         local charsFolder = workspace:FindFirstChild("Characters")
                         local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-
                         if playersFolder then
                             for _, enemyModel in ipairs(playersFolder:GetChildren()) do
                                 if enemyModel.Name ~= lp.Name and enemyModel:FindFirstChild("HumanoidRootPart") and enemyModel:FindFirstChild("Humanoid") and enemyModel.Humanoid.Health > 0 then
-                                    local dist = (char.HumanoidRootPart.Position - enemyModel.HumanoidRootPart.Position).Magnitude
+                                    local dist = (myRoot.Position - enemyModel.HumanoidRootPart.Position).Magnitude
                                     if dist < shortestDist then
                                         shortestDist = dist
                                         closestPlayer = enemyModel
@@ -713,991 +1233,335 @@ do
                                 end
                             end
                         end
-                        if closestPlayer then 
-                            targetToShoot = closestPlayer.HumanoidRootPart.Position 
-                        end
                     end
-
-                    fireSkill(fruit, skillName, targetToShoot, delayTime)
-                    firedAny = true
-                    if isAwakeningSkill then 
-                        task.wait(2.5) 
-                    else 
-                        task.wait(delayTime) 
-                    end
+                    cachedAimbotTarget = closestPlayer
+                else
+                    cachedAimbotTarget = nil
                 end
             end
-            if not firedAny then 
-                task.wait(0.5) 
+        end)
+
+        RunService.RenderStepped:Connect(function()
+            if Options.CombatAimbot and Options.CombatAimbot.Value and cachedAimbotTarget and cachedAimbotTarget:FindFirstChild("HumanoidRootPart") then
+                local myChar = getMyCharacter()
+                local myHum = myChar and myChar:FindFirstChild("Humanoid")
+                if myHum and myHum.Health > 0 then
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, cachedAimbotTarget.HumanoidRootPart.Position)
+                end
             end
-        end
-    end)
-end
-
--- =========================================================================
--- [หน้าสุ่มผล] ระบบ Auto Spin & Inventory อัจฉริยะ 
--- =========================================================================
-do
-    local MyFruitsList = Tabs.Spin:AddParagraph({ 
-        Title = "🎒 ผลไม้ในกระเป๋าของคุณ", 
-        Content = "กำลังโหลดข้อมูล..." 
-    })
-    
-    local SpinStatsLabel = Tabs.Spin:AddParagraph({ 
-        Title = "📊 สถานะการสุ่ม (Real-time)", 
-        Content = "กำลังดึงข้อมูลจากเซิร์ฟเวอร์..." 
-    })
-
-    task.spawn(function()
-        while task.wait(0.5) do
-            pcall(function()
-                local mainData = lp:FindFirstChild("MAIN_DATA")
-                if not mainData then return end
-
-                local slotsText = ""
-                local currentSlotNum = mainData:FindFirstChild("Slot") and mainData.Slot.Value or 1
-                local slotsFolder = mainData:FindFirstChild("Slots")
-                
-                if slotsFolder then
-                    local maxSlots = #slotsFolder:GetChildren()
-                    for i = 1, maxSlots do
-                        local slotVal = slotsFolder:FindFirstChild(tostring(i))
-                        if slotVal and slotVal.Value ~= "" and slotVal.Value ~= "None" then
-                            local mark = (i == currentSlotNum) and "✅ (กำลังใส่)" or ""
-                            slotsText = slotsText .. "Slot " .. i .. ": " .. slotVal.Value .. " " .. mark .. "\n"
-                        end
-                    end
-                end
-                
-                if slotsText == "" then 
-                    slotsText = "ไม่พบผลไม้ในกระเป๋า" 
-                end
-                MyFruitsList:SetDesc(slotsText)
-
-                local gems = mainData:FindFirstChild("Gems") and mainData.Gems.Value or 0
-                local rText, eText, lText, timerStr = "0/80", "0/160", "0/800", "00:00:00"
-
-                local gui = lp:FindFirstChild("PlayerGui")
-                local spinUI = gui and gui:FindFirstChild("UI") and gui.UI:FindFirstChild("Spin")
-                
-                if spinUI then
-                    local rpNode = spinUI:FindFirstChild("RarePity") 
-                    if rpNode and rpNode.Text ~= "" then rText = rpNode.Text end
-                    
-                    local epNode = spinUI:FindFirstChild("EpicPity") 
-                    if epNode and epNode.Text ~= "" then eText = epNode.Text end
-                    
-                    local lpNode = spinUI:FindFirstChild("LegendaryPity") 
-                    if lpNode and lpNode.Text ~= "" then lText = lpNode.Text end
-                    
-                    local tNode = spinUI:FindFirstChild("PityTimer") 
-                    if tNode and tNode.Text ~= "" then timerStr = tNode.Text end
-                end
-
-                SpinStatsLabel:SetDesc(
-                    "💎 เพชร: " .. tostring(gems) .. "\n" ..
-                    "🟢 Rare Pity: " .. rText .. "\n" ..
-                    "🟣 Epic Pity: " .. eText .. "\n" ..
-                    "🟡 Legend Pity: " .. lText .. "\n" ..
-                    "🔄 รีเซ็ตใน: " .. timerStr
-                )
-            end)
-        end
-    end)
-
-    Tabs.Spin:AddParagraph({ 
-        Title = "🎰 ระบบสุ่มผลอัตโนมัติ", 
-        Content = "เลือกช่องที่จะสุ่ม และระดับ/ผลที่ต้องการ" 
-    })
-
-    Tabs.Spin:AddDropdown("SpinTargetSlot", {
-        Title = "🎯 เลือกช่อง (Slot) สุ่มผล",
-        Values = {"1", "2", "3", "4", "5", "6", "7", "8"},
-        Multi = false,
-        Default = 1,
-    })
-
-    Tabs.Spin:AddDropdown("SpinTargetRarity", {
-        Title = "🎯 หยุดสุ่มเมื่อได้ระดับ",
-        Values = {"Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"},
-        Multi = false,
-        Default = 4,
-    })
-
-    local allFruitNames = {}
-    for fruitName, _ in pairs(FruitDB) do 
-        table.insert(allFruitNames, fruitName) 
+        end)
     end
-    table.sort(allFruitNames)
-    table.insert(allFruitNames, 1, "ไม่ระบุ (สุ่มตามระดับแทน)")
 
-    Tabs.Spin:AddDropdown("SpinTargetFruit", {
-        Title = "🍎 หยุดเมื่อได้ผลนี้ (เจาะจง)",
-        Values = allFruitNames,
-        Multi = false,
-        Default = 1,
-    })
+    -- =========================================================================
+    -- [หน้าเทเลพอร์ต] ระบบ Teleport หาผู้เล่น
+    -- =========================================================================
+    do
+        Tabs.Teleport:AddParagraph({ Title = "⚡ ระบบเทเลพอร์ต", Content = "เลือกรายชื่อผู้เล่นเพื่อวาร์ปไปหาเป้าหมาย" })
 
-    Tabs.Spin:AddDropdown("ProtectRarity", {
-        Title = "🛡️ เลือกระดับป้องกัน (กันสุ่มทิ้ง)",
-        Values = {"Rare", "Epic", "Legendary", "Mythic"},
-        Multi = true,
-        Default = {"Legendary", "Mythic"},
-    })
-
-    Tabs.Spin:AddToggle("ProtectToggle", { Title = "🛡️ เปิดระบบป้องกันผลแรร์หาย", Default = true })
-    Tabs.Spin:AddToggle("AutoSpinToggle", { Title = "🎰 เปิดใช้งาน Auto Spin", Default = false })
-
-    task.spawn(function()
-        while task.wait(0.5) do
-            if Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true then
-                
-                local remote = getRemote()
-                local md = lp:FindFirstChild("MAIN_DATA")
-                if not remote or not md then 
-                    continue 
-                end
-
-                local targetSlotToSpin = tonumber(Options.SpinTargetSlot.Value) or 1
-                local curSlot = md:FindFirstChild("Slot") and md.Slot.Value
-
-                -- 1. สลับไปช่องเป้าหมายที่จะสุ่ม
-                if curSlot ~= targetSlotToSpin then
-                    pcall(function() 
-                        remote:InvokeServer("FruitsHandler", "SwitchSlot", {Slot = targetSlotToSpin}) 
-                    end)
-                    task.wait(1.5) 
-                end
-                
-                -- 2. ระบบป้องกันผลแรร์หาย
-                if Options.ProtectToggle and Options.ProtectToggle.Value == true then
-                    if md:FindFirstChild("Slots") then
-                        local slotVal = md.Slots:FindFirstChild(tostring(targetSlotToSpin))
-                        if slotVal and slotVal.Value ~= "None" and slotVal.Value ~= "" then
-                            local curFruit = string.gsub(slotVal.Value, "%s+", "")
-                            local curRarity = FruitDB[curFruit] or 99 
-                            
-                            local protectedRarities = Options.ProtectRarity.Value or {}
-                            local isProtected = false
-                            
-                            if curRarity == 99 then 
-                                isProtected = true
-                            else
-                                for rarityStr, isEnabled in pairs(protectedRarities) do
-                                    if isEnabled and RarityMap[rarityStr] == curRarity then
-                                        isProtected = true 
-                                        break
-                                    end
-                                end
-                            end
-
-                            if isProtected then 
-                                Options.AutoSpinToggle:SetValue(false)
-                                KIDzUI:Notify({Title="⚠️ ระบบป้องกันทำงาน!", Content="ช่องที่ " .. targetSlotToSpin .. " มีผล "..curFruit.." (ห้ามสุ่มทิ้ง)", Duration=10})
-                                continue
-                            end
-                        end
-                    end
-                end
-
-                -- 3. ทำการสุ่ม
-                if remote:IsA("RemoteFunction") then
-                    task.wait(1.5) 
-                    local ok, result = pcall(function() return remote:InvokeServer("FruitsHandler", "Spin", {}) end)
-                    
-                    if ok and result then
-                        local spunName, spunRarity = "Unknown", 1
-                        if type(result) == "string" then
-                            spunName = result
-                            spunRarity = FruitDB[result] or 1
-                        elseif type(result) == "table" then
-                            spunName = result.Fruit or result.Name or "Unknown"
-                            local rarStr = result.Rarity or "Common"
-                            spunRarity = RarityMap[rarStr] or FruitDB[spunName] or 1
-                        end
-
-                        local targetRarity = RarityMap[Options.SpinTargetRarity.Value] or 4
-                        local targetFruit = Options.SpinTargetFruit.Value
-
-                        local shouldStop = false
-                        if spunRarity >= targetRarity then 
-                            shouldStop = true 
-                        end
-                        if targetFruit ~= "ไม่ระบุ (สุ่มตามระดับแทน)" and spunName == targetFruit then 
-                            shouldStop = true 
-                        end
-
-                        if shouldStop then
-                            Options.AutoSpinToggle:SetValue(false)
-                            KIDzUI:Notify({Title="🎉 สุ่มสำเร็จ!", Content="ได้รับผล: " .. spunName .. "\nสคริปต์หยุดสุ่มแล้ว", Duration=15})
-                        else
-                            KIDzUI:Notify({Title="🎰 หมุนตู้สุ่ม...", Content="ได้รับผล: " .. spunName .. " (กำลังสุ่มต่อ...)", Duration=2})
-                        end
-                        task.wait(3.5)
-                    else
-                        Options.AutoSpinToggle:SetValue(false)
-                        KIDzUI:Notify({Title="❌ หยุดสุ่มอัตโนมัติ", Content="เซิร์ฟเวอร์ไม่ตอบสนอง หรือ เงิน/เพชรหมด!", Duration=5})
-                    end
+        local function getPlayerNames()
+            local list = {"กดเลือกรายชื่อ"}
+            local charsFolder = workspace:FindFirstChild("Characters")
+            local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
+            if playersFolder then
+                for _, v in ipairs(playersFolder:GetChildren()) do
+                    if v.Name ~= lp.Name then table.insert(list, v.Name) end
                 end
             end
+            if #list == 1 then table.insert(list, "ไม่พบผู้เล่น") end
+            return list
         end
-    end)
-end
 
--- =========================================================================
--- [หน้าต่อสู้ PvP] ระบบ Combat อัจฉริยะ (ESP, Aimbot)
--- =========================================================================
-do
-    Tabs.Combat:AddParagraph({ Title = "⚔️ ระบบช่วยต่อสู้ (Combat Assist)", Content = "ล็อคเป้าหมายผู้เล่นอื่น และระบบมองทะลุกำแพง (ESP)" })
+        local TargetPlayerDropdown = Tabs.Teleport:AddDropdown("TargetPlayer", {
+            Title = "🎯 เลือกเป้าหมาย", Values = getPlayerNames(), Multi = false, Default = 1,
+        })
 
-    Tabs.Combat:AddToggle("ESPToggle", { Title = "👁️ เปิดใช้งาน ESP (มองทะลุกำแพง)", Default = false })
-    Tabs.Combat:AddToggle("ESPHighlight", { Title = "🟥 แสดงกรอบสีแดงรอบตัว (Chams)", Default = true })
-    Tabs.Combat:AddToggle("ESPName", { Title = "🏷️ แสดงชื่อและระยะห่าง (Names)", Default = true })
+        Tabs.Teleport:AddButton({
+            Title = "🔄 รีเฟรชรายชื่อ",
+            Callback = function()
+                local list = getPlayerNames()
+                Options.TargetPlayer:SetValues(list)
+                Options.TargetPlayer:SetValue("กดเลือกรายชื่อ")
+                KIDzUI:Notify({Title = "Teleport", Content = "อัปเดตรายชื่อและคืนค่าเริ่มต้นแล้ว", Duration = 2})
+            end
+        })
 
-    task.spawn(function()
-        while task.wait(0.1) do
-            pcall(function()
-                local myChar = getMyCharacter()
-                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                local charsFolder = workspace:FindFirstChild("Characters")
-                local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-
-                if playersFolder then
-                    for _, enemyModel in ipairs(playersFolder:GetChildren()) do
-                        if enemyModel.Name ~= lp.Name then
-                            local hl = enemyModel:FindFirstChild("KIDzESP_HL")
-                            if Options.ESPToggle and Options.ESPToggle.Value and Options.ESPHighlight and Options.ESPHighlight.Value then
-                                if not hl then
-                                    hl = Instance.new("Highlight") 
-                                    hl.Name = "KIDzESP_HL" 
-                                    hl.FillColor = Color3.fromRGB(255, 0, 0)
-                                    hl.OutlineColor = Color3.fromRGB(255, 255, 255) 
-                                    hl.FillTransparency = 0.5 
-                                    hl.OutlineTransparency = 0
-                                    hl.Parent = enemyModel
-                                end
-                            else
-                                if hl then hl:Destroy() end
-                            end
-
-                            local enemyRoot = enemyModel:FindFirstChild("HumanoidRootPart")
-                            local bb = enemyModel:FindFirstChild("KIDzESP_BB")
-                            
-                            if Options.ESPToggle and Options.ESPToggle.Value and Options.ESPName and Options.ESPName.Value and enemyRoot then
-                                if not bb then
-                                    bb = Instance.new("BillboardGui") 
-                                    bb.Name = "KIDzESP_BB" 
-                                    bb.Size = UDim2.new(0, 200, 0, 50)
-                                    bb.StudsOffset = Vector3.new(0, 3, 0) 
-                                    bb.AlwaysOnTop = true
-                                    
-                                    local txt = Instance.new("TextLabel", bb) 
-                                    txt.Size = UDim2.new(1, 0, 1, 0)
-                                    txt.BackgroundTransparency = 1 
-                                    txt.TextColor3 = Color3.fromRGB(255, 255, 255)
-                                    txt.TextStrokeTransparency = 0 
-                                    txt.Font = Enum.Font.Code 
-                                    txt.TextSize = 14
-                                    
-                                    bb.Parent = enemyModel
-                                end
-                                if myRoot then
-                                    local dist = math.floor((myRoot.Position - enemyRoot.Position).Magnitude)
-                                    bb.TextLabel.Text = enemyModel.Name .. " [" .. dist .. "m]"
-                                end
-                            else
-                                if bb then bb:Destroy() end
-                            end
-                        end
-                    end
-                end
-            end)
-        end
-    end)
-
-    Tabs.Combat:AddToggle("CombatAimbot", { Title = "🎯 เปิดใช้งานระบบล็อคเป้าหมาย (Camlock)", Default = false })
-    Tabs.Combat:AddKeybind("AimbotKey", { Title = "คีย์ลัดเปิด/ปิด ล็อคเป้า", Mode = "Toggle", Default = "Q", Callback = function(Value) Options.CombatAimbot:SetValue(Value) end })
-    Tabs.Combat:AddSlider("AimbotRadius", { Title = "📏 ระยะค้นหาเป้าหมาย (Studs)", Default = 100, Min = 10, Max = 500, Rounding = 0 })
-
-    local cachedAimbotTarget = nil
-    task.spawn(function()
-        while task.wait(0.1) do
-            if Options.CombatAimbot and Options.CombatAimbot.Value then
-                local radius = Options.AimbotRadius and Options.AimbotRadius.Value or 100
-                local closestPlayer = nil
-                local shortestDist = radius
-                local myChar = getMyCharacter()
-                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                
-                if myRoot then
+        Tabs.Teleport:AddButton({
+            Title = "⚡ เทเลพอร์ตไปหาเป้าหมาย",
+            Callback = function()
+                local targetName = Options.TargetPlayer.Value
+                if targetName and targetName ~= "กดเลือกรายชื่อ" and targetName ~= "ไม่พบผู้เล่น" then
                     local charsFolder = workspace:FindFirstChild("Characters")
                     local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-                    if playersFolder then
-                        for _, enemyModel in ipairs(playersFolder:GetChildren()) do
-                            if enemyModel.Name ~= lp.Name and enemyModel:FindFirstChild("HumanoidRootPart") and enemyModel:FindFirstChild("Humanoid") and enemyModel.Humanoid.Health > 0 then
-                                local dist = (myRoot.Position - enemyModel.HumanoidRootPart.Position).Magnitude
-                                if dist < shortestDist then
-                                    shortestDist = dist
-                                    closestPlayer = enemyModel
-                                end
-                            end
-                        end
+                    local targetModel = playersFolder and playersFolder:FindFirstChild(targetName)
+                    local targetRoot = targetModel and targetModel:FindFirstChild("HumanoidRootPart")
+                    local myChar = getMyCharacter()
+                    local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                    
+                    if targetRoot and myRoot then
+                        myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) 
+                        KIDzUI:Notify({Title = "Teleport", Content = "วาร์ปไปหา " .. targetName .. " สำเร็จ!", Duration = 3})
+                    else
+                        KIDzUI:Notify({Title = "Error", Content = "ไม่พบตัวละครเป้าหมาย", Duration = 3})
                     end
-                end
-                cachedAimbotTarget = closestPlayer
-            else
-                cachedAimbotTarget = nil
-            end
-        end
-    end)
-
-    RunService.RenderStepped:Connect(function()
-        if Options.CombatAimbot and Options.CombatAimbot.Value and cachedAimbotTarget and cachedAimbotTarget:FindFirstChild("HumanoidRootPart") then
-            local myChar = getMyCharacter()
-            local myHum = myChar and myChar:FindFirstChild("Humanoid")
-            if myHum and myHum.Health > 0 then
-                Camera.CFrame = CFrame.new(Camera.CFrame.Position, cachedAimbotTarget.HumanoidRootPart.Position)
-            end
-        end
-    end)
-end
-
--- =========================================================================
--- [หน้าเทเลพอร์ต] ระบบ Teleport หาผู้เล่น
--- =========================================================================
-do
-    Tabs.Teleport:AddParagraph({ Title = "⚡ ระบบเทเลพอร์ต", Content = "เลือกรายชื่อผู้เล่นเพื่อวาร์ปไปหาเป้าหมาย" })
-
-    local function getPlayerNames()
-        local list = {"กดเลือกรายชื่อ"}
-        local charsFolder = workspace:FindFirstChild("Characters")
-        local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-        if playersFolder then
-            for _, v in ipairs(playersFolder:GetChildren()) do
-                if v.Name ~= lp.Name then table.insert(list, v.Name) end
-            end
-        end
-        if #list == 1 then table.insert(list, "ไม่พบผู้เล่น") end
-        return list
-    end
-
-    local TargetPlayerDropdown = Tabs.Teleport:AddDropdown("TargetPlayer", {
-        Title = "🎯 เลือกเป้าหมาย", Values = getPlayerNames(), Multi = false, Default = 1,
-    })
-
-    Tabs.Teleport:AddButton({
-        Title = "🔄 รีเฟรชรายชื่อ",
-        Callback = function()
-            local list = getPlayerNames()
-            Options.TargetPlayer:SetValues(list)
-            Options.TargetPlayer:SetValue("กดเลือกรายชื่อ")
-            KIDzUI:Notify({Title = "Teleport", Content = "อัปเดตรายชื่อและคืนค่าเริ่มต้นแล้ว", Duration = 2})
-        end
-    })
-
-    Tabs.Teleport:AddButton({
-        Title = "⚡ เทเลพอร์ตไปหาเป้าหมาย",
-        Callback = function()
-            local targetName = Options.TargetPlayer.Value
-            if targetName and targetName ~= "กดเลือกรายชื่อ" and targetName ~= "ไม่พบผู้เล่น" then
-                local charsFolder = workspace:FindFirstChild("Characters")
-                local playersFolder = charsFolder and charsFolder:FindFirstChild("Players")
-                local targetModel = playersFolder and playersFolder:FindFirstChild(targetName)
-                local targetRoot = targetModel and targetModel:FindFirstChild("HumanoidRootPart")
-                local myChar = getMyCharacter()
-                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-                
-                if targetRoot and myRoot then
-                    myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) 
-                    KIDzUI:Notify({Title = "Teleport", Content = "วาร์ปไปหา " .. targetName .. " สำเร็จ!", Duration = 3})
                 else
-                    KIDzUI:Notify({Title = "Error", Content = "ไม่พบตัวละครเป้าหมาย", Duration = 3})
+                    KIDzUI:Notify({Title = "Error", Content = "กรุณาเลือกรายชื่อก่อนวาร์ป", Duration = 3})
                 end
-            else
-                KIDzUI:Notify({Title = "Error", Content = "กรุณาเลือกรายชื่อก่อนวาร์ป", Duration = 3})
             end
-        end
-    })
+        })
 
-    task.spawn(function()
-        while task.wait(3) do
-            local currentVal = Options.TargetPlayer.Value
-            local list = getPlayerNames()
-            pcall(function()
-                Options.TargetPlayer:SetValues(list)
-                if currentVal ~= "กดเลือกรายชื่อ" and table.find(list, currentVal) then
-                    Options.TargetPlayer:SetValue(currentVal)
-                else
-                    Options.TargetPlayer:SetValue("กดเลือกรายชื่อ")
-                end
-            end)
-        end
-    end)
-end
-
--- =========================================================================
--- [หน้า Misc] ระบบเกิดใหม่อัตโนมัติ (🔥 MASTER FIX: ทะลุหน้าจอบัค 100%)
--- =========================================================================
-do
-    local SafeZoneToggle = Tabs.Misc:AddToggle("SafeZone", { Title = "🛸 วาร์ปขึ้นฟ้าฟาร์มในพื้นที่ปลอดภัย (กันโดนฆ่า)", Default = false })
-    local AutoPlayToggle = Tabs.Misc:AddToggle("AutoPlay", { Title = "🔄 เปิดใช้งานระบบเกิดใหม่อัตโนมัติ (Auto Play)", Default = false })
-
-    task.spawn(function()
-        while task.wait(0.5) do
-            if Options.SafeZone and Options.SafeZone.Value == true then
-                if _G.isFightingBoss then continue end
+        task.spawn(function()
+            while task.wait(3) do
+                local currentVal = Options.TargetPlayer.Value
+                local list = getPlayerNames()
                 pcall(function()
-                    local char = getMyCharacter()
-                    local root = char and char:FindFirstChild("HumanoidRootPart")
-                    local hum = char and char:FindFirstChild("Humanoid")
-
-                    if root and hum and hum.Health > 0 then
-                        if root.Position.Y < (originalSkyY - 50) then
-                            oldSpawnCFrame = CFrame.new(root.Position.X, originalSkyY, root.Position.Z)
-                            root.CFrame = oldSpawnCFrame
-                        end
-                        local platform = workspace:FindFirstChild("KIDzHub_Anchor")
-                        if not platform then
-                            platform = Instance.new("Part") 
-                            platform.Name = "KIDzHub_Anchor" 
-                            platform.Size = Vector3.new(20, 1, 20)
-                            platform.Transparency = 1 
-                            platform.Anchored = true 
-                            platform.Parent = workspace
-                        end
-                        platform.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.5, root.Position.Z)
+                    Options.TargetPlayer:SetValues(list)
+                    if currentVal ~= "กดเลือกรายชื่อ" and table.find(list, currentVal) then
+                        Options.TargetPlayer:SetValue(currentVal)
+                    else
+                        Options.TargetPlayer:SetValue("กดเลือกรายชื่อ")
                     end
                 end)
-            else
-                local platform = workspace:FindFirstChild("KIDzHub_Anchor")
-                if platform then platform:Destroy() end
             end
-        end
-    end)
+        end)
+    end
 
-    -- 🔥 [MASTER FIX] ระบบ Auto Play วาร์ปลงไปเกิดทะลุหน้าจอ + ปรับกล้องให้ตรง
-    task.spawn(function()
-        local playStuckTimer = 0
-        while task.wait(1) do
-            if Options.AutoPlay and Options.AutoPlay.Value == true then
+    -- =========================================================================
+    -- [หน้า Misc] ระบบเกิดใหม่อัตโนมัติ (🔥 MASTER FIX: ทะลุหน้าจอบัค 100%)
+    -- =========================================================================
+    do
+        local SafeZoneToggle = Tabs.Misc:AddToggle("SafeZone", { Title = "🛸 วาร์ปขึ้นฟ้าฟาร์มในพื้นที่ปลอดภัย (กันโดนฆ่า)", Default = false })
+        local AutoPlayToggle = Tabs.Misc:AddToggle("AutoPlay", { Title = "🔄 เปิดใช้งานระบบเกิดใหม่อัตโนมัติ (Auto Play)", Default = false })
+
+        task.spawn(function()
+            while task.wait(0.5) do
+                if Options.SafeZone and Options.SafeZone.Value == true then
+                    if _G.isFightingBoss then continue end
+                    pcall(function()
+                        local char = getMyCharacter()
+                        local root = char and char:FindFirstChild("HumanoidRootPart")
+                        local hum = char and char:FindFirstChild("Humanoid")
+
+                        if root and hum and hum.Health > 0 then
+                            if root.Position.Y < (originalSkyY - 50) then
+                                oldSpawnCFrame = CFrame.new(root.Position.X, originalSkyY, root.Position.Z)
+                                root.CFrame = oldSpawnCFrame
+                            end
+                            local platform = workspace:FindFirstChild("KIDzHub_Anchor")
+                            if not platform then
+                                platform = Instance.new("Part") 
+                                platform.Name = "KIDzHub_Anchor" 
+                                platform.Size = Vector3.new(20, 1, 20)
+                                platform.Transparency = 1 
+                                platform.Anchored = true 
+                                platform.Parent = workspace
+                            end
+                            platform.CFrame = CFrame.new(root.Position.X, root.Position.Y - 3.5, root.Position.Z)
+                        end
+                    end)
+                else
+                    local platform = workspace:FindFirstChild("KIDzHub_Anchor")
+                    if platform then platform:Destroy() end
+                end
+            end
+        end)
+
+        local function doAutoPlay(playerGui)
+            pcall(function()
+                local rep = ReplicatedStorage:WaitForChild("Replicator", 5)
+                local repNY = ReplicatedStorage:WaitForChild("ReplicatorNoYield", 5)
+
+                if repNY then
+                    repNY:FireServer("Core", "LoadCharacter", {})
+                end
+                task.wait(0.3)
+                if rep then
+                    task.spawn(function()
+                        pcall(function() rep:InvokeServer("ServerManager", "GetServers", {}) end)
+                    end)
+                    task.wait(0.1)
+                    task.spawn(function()
+                        pcall(function() rep:InvokeServer("Core", "SetSafeZone", {}) end)
+                    end)
+                end
+                task.wait(0.3)
+                if repNY then
+                    repNY:FireServer("Main", "LoadCharacter")
+                end
+
+                local newChar = nil
+                local charConn
+                charConn = lp.CharacterAdded:Connect(function(char)
+                    newChar = char
+                    if charConn then charConn:Disconnect() end
+                end)
+
+                local t = 0
+                while not newChar and t < 12 do
+                    task.wait(0.5)
+                    t = t + 0.5
+                    local tryChar = getMyCharacter()
+                    if tryChar then
+                        local tryHum = tryChar:FindFirstChild("Humanoid")
+                        if tryHum and tryHum.Health > 0 then
+                            newChar = tryChar
+                            if charConn then charConn:Disconnect() end
+                            break
+                        end
+                    end
+                end
+
+                if not newChar then
+                    return
+                end
+
+                task.wait(3)
+
+                pcall(function()
+                    local uiFolder = playerGui:FindFirstChild("UI")
+                    if uiFolder then
+                        local mainMenu = uiFolder:FindFirstChild("MainMenu")
+                        if mainMenu then mainMenu.Visible = false end
+                        local loadingScreen = uiFolder:FindFirstChild("LoadingScreen")
+                        if loadingScreen then loadingScreen.Visible = false end
+
+                        local hudNames = { "HUD", "Info", "Bottom", "Game" }
+                        for _, name in ipairs(hudNames) do
+                            local ui = uiFolder:FindFirstChild(name)
+                            if ui then ui.Visible = true end
+                        end
+                    end
+                end)
+
+                task.wait(0.5)
+                pcall(function()
+                    local finalChar = getMyCharacter()
+                    if finalChar then
+                        local hum = finalChar:FindFirstChild("Humanoid")
+                        if hum then
+                            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+                            workspace.CurrentCamera.CameraSubject = hum
+                        end
+                    end
+                end)
+            end)
+        end
+
+        task.spawn(function()
+            local playStuckTimer = 0
+            local lastIsAlive = true
+            local isDoingAutoPlay = false
+
+            while task.wait(1) do
+                if not (Options.AutoPlay and Options.AutoPlay.Value == true) then
+                    playStuckTimer = 0
+                    lastIsAlive = true
+                    isDoingAutoPlay = false
+                    continue
+                end
+
                 local char = getMyCharacter()
                 local hum = char and char:FindFirstChild("Humanoid")
                 local isAlive = char and hum and hum.Health > 0
 
                 if not isAlive then
+                    lastIsAlive = false
+                    playStuckTimer = playStuckTimer + 1
+
                     local playerGui = lp:FindFirstChild("PlayerGui")
-                    if playerGui then
-                        local uiFolder = playerGui:FindFirstChild("UI")
-                        local mainMenu = uiFolder and uiFolder:FindFirstChild("MainMenu")
+                    if not playerGui then continue end
 
-                        if mainMenu and mainMenu.Visible == true then
-                            local playBtn = mainMenu:FindFirstChild("Buttons") and mainMenu.Buttons:FindFirstChild("Play")
+                    local uiFolder = playerGui:FindFirstChild("UI")
+                    local mainMenu = uiFolder and uiFolder:FindFirstChild("MainMenu")
 
-                            if playBtn and playBtn.Visible == true then
-                                playStuckTimer = playStuckTimer + 1
-                                if playStuckTimer > 30 then
-                                    KIDzUI:Notify({Title = "⚠️ ระบบป้องกันบัค", Content = "ค้างหน้าเมนูนานเกินไป กำลัง Rejoin...", Duration = 5})
-                                    task.wait(2) 
-                                    TeleportService:Teleport(game.PlaceId, lp) 
-                                    return
+                    if mainMenu and mainMenu.Visible and not isDoingAutoPlay then
+
+                        if playStuckTimer > 35 then
+                            KIDzUI:Notify({
+                                Title = "⚠️ ระบบป้องกันบัค",
+                                Content = "ค้างหน้าเมนูนานเกินไป กำลัง Rejoin...",
+                                Duration = 5
+                            })
+                            task.wait(2)
+                            pcall(function() TeleportService:Teleport(game.PlaceId, lp) end)
+                            return
+                        end
+
+                        isDoingAutoPlay = true
+                        task.spawn(function()
+                            doAutoPlay(playerGui)
+                            task.wait(15)
+                            isDoingAutoPlay = false
+                        end)
+                        task.wait(8)
+                    end
+
+                else
+                    if not lastIsAlive then
+                        task.delay(1, function()
+                            pcall(function()
+                                local pg = lp:FindFirstChild("PlayerGui")
+                                local ui = pg and pg:FindFirstChild("UI")
+                                if ui then
+                                    local mm = ui:FindFirstChild("MainMenu")
+                                    if mm then mm.Visible = false end
                                 end
-
-                                pcall(function()
-                                    -- ใช้ Remote ตรงตามที่คุณให้มาเพื่อบังคับเซิร์ฟเวอร์โหลดตัวละคร (Bypass UI 100%)
-                                    local rep = ReplicatedStorage:FindFirstChild("Replicator")
-                                    local repNoYield = ReplicatedStorage:FindFirstChild("ReplicatorNoYield")
-
-                                    if repNoYield then
-                                        repNoYield:FireServer("Core", "LoadCharacter", {})
-                                    end
-                                    if rep then
-                                        task.spawn(function() rep:InvokeServer("ServerManager", "GetServers", {}) end)
-                                        task.spawn(function() rep:InvokeServer("Core", "SetSafeZone", {}) end)
-                                    end
-                                    if repNoYield then
-                                        repNoYield:FireServer("Main", "LoadCharacter")
-                                    end
-                                    
-                                    -- ปิด UI Menu เองเพื่อแก้บัคหน้าจอค้าง
-                                    mainMenu.Visible = false
-                                    local loadingScreen = uiFolder:FindFirstChild("LoadingScreen")
-                                    if loadingScreen then loadingScreen.Visible = false end
-
-                                    -- ตั้งค่ามุมกล้องให้ติดกับตัวละครหลังมันโหลดเสร็จ
-                                    task.delay(1, function()
-                                        if workspace.CurrentCamera then
-                                            workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-                                            local newChar = getMyCharacter()
-                                            if newChar and newChar:FindFirstChild("Humanoid") then
-                                                workspace.CurrentCamera.CameraSubject = newChar.Humanoid
-                                            end
-                                        end
-                                        
-                                        local mainUI = uiFolder:FindFirstChild("Main")
-                                        if mainUI then mainUI.Visible = true end
-                                    end)
-                                end)
-                                task.wait(5)
-                            end
-                        end
+                                local fc = getMyCharacter()
+                                if fc and fc:FindFirstChild("Humanoid") then
+                                    workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
+                                    workspace.CurrentCamera.CameraSubject = fc.Humanoid
+                                end
+                            end)
+                        end)
                     end
-                else 
-                    playStuckTimer = 0 
-                end
-            end
-        end
-    end)
-end
-
--- =========================================================================
--- [หน้าบอส] ระบบฟาร์มบอส Marco 
--- =========================================================================
-do
-    local bossHoverHeight = 30
-    local bossCheckInterval = 0.3
-    local bossSpawnThreshold = 10
-    local totalDamageDealt = 0
-    local bossMaxHpSnapshot = 0
-    local lastBossHp = 0
-    local BOSS_PATH = {"Characters", "NPCs", "Marco"}
-
-    local function getMarco()
-        local obj = workspace
-        for _, part in ipairs(BOSS_PATH) do 
-            obj = obj:FindFirstChild(part) 
-            if not obj then return nil end 
-        end
-        return obj
-    end
-
-    local function timeToSeconds(timeStr)
-        if not timeStr then return nil end
-        local h, m, s = string.match(timeStr, "(%d+):(%d+):(%d+)")
-        if h and m and s then return tonumber(h) * 3600 + tonumber(m) * 60 + tonumber(s) end
-        local m2, s2 = string.match(timeStr, "(%d+):(%d+)")
-        if m2 and s2 then return tonumber(m2) * 60 + tonumber(s2) end
-        return nil
-    end
-
-    local function getServerTimeSec()
-        local gui = lp:FindFirstChild("PlayerGui")
-        local ui = gui and gui:FindFirstChild("UI")
-        local info = ui and ui:FindFirstChild("Info")
-        local stLabel = info and info:FindFirstChild("ServerTime")
-        if not stLabel then return nil end
-        return timeToSeconds(string.match(stLabel.Text, "(%d+:%d+:%d+)"))
-    end
-
-    local function findBestServer()
-        pcall(function()
-            local req = request or http_request or (syn and syn.request)
-            if req then
-                local res = req({Url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"})
-                if res and res.Body then
-                    local data = HttpService:JSONDecode(res.Body)
-                    if data and data.data then
-                        local servers = {}
-                        for _, v in ipairs(data.data) do
-                            if type(v) == "table" and v.playing < v.maxPlayers and v.id ~= game.JobId then
-                                table.insert(servers, v.id)
-                            end
-                        end
-                        if #servers > 0 then return { jobId = servers[math.random(1, #servers)] } end
-                    end
+                    lastIsAlive = true
+                    playStuckTimer = 0
+                    isDoingAutoPlay = false
                 end
             end
         end)
-        return { jobId = nil }
     end
 
-    Tabs.Boss:AddParagraph({ Title = "🐉 ระบบฟาร์มบอส Marco", Content = "วาร์ปขึ้นบินเหนือหัวบอส → ปล่อยสกิลอัตโนมัติ ล็อกเป้าหมาย 100%" })
-    Tabs.Boss:AddSlider("BossHoverHeight", { Title = "📏 ความสูงเหนือหัวบอส (Studs)", Default = 150, Min = 10, Max = 500, Rounding = 0 })
-    Tabs.Boss:AddSlider("BossSpawnThreshold", { Title = "⏳ หาเซิร์ฟที่บอสจะเกิดใน (นาที)", Default = 10, Min = 1, Max = 30, Rounding = 0 })
-    Tabs.Boss:AddSlider("BossHopDelay", { Title = "⏱️ หน่วงเวลาก่อนหาเซิร์ฟใหม่ (วินาที)", Default = 30, Min = 0, Max = 120, Rounding = 0 })
-    Tabs.Boss:AddToggle("AutoBoss", { Title = "⚔️ เปิดระบบฟาร์มบอส Marco อัตโนมัติ", Default = false })
-    Tabs.Boss:AddToggle("AutoHopBoss", { Title = "🔀 Rejoin หาเซิร์ฟบอสใกล้เกิดอัตโนมัติ", Default = false })
+    -- =========================================================================
+    -- [หน้าบอส] ระบบฟาร์มบอส Marco 
+    -- =========================================================================
+    do
+        local bossHoverHeight = 30
+        local bossCheckInterval = 0.3
+        local bossSpawnThreshold = 10
+        local totalDamageDealt = 0
+        local bossMaxHpSnapshot = 0
+        local lastBossHp = 0
+        local BOSS_PATH = {"Characters", "NPCs", "Marco"}
 
-    Tabs.Boss:AddButton({
-        Title = "📍 วาร์ปไปหาบอส Marco ทันที",
-        Callback = function()
-            local marco = getMarco()
-            if not marco then KIDzUI:Notify({Title = "❌ ไม่พบบอส", Content = "ไม่เจอ Marco ในแผนที่นี้", Duration = 3}) return end
-            local root = marco:FindFirstChild("HumanoidRootPart") or marco:FindFirstChildWhichIsA("BasePart")
-            if not root then return end
-            local myChar = getMyCharacter()
-            local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            if myRoot then myRoot.CFrame = CFrame.new(root.Position + Vector3.new(0, (Options.BossHoverHeight and Options.BossHoverHeight.Value or 30), 0)) end
+        local function getMarco()
+            local obj = workspace
+            for _, part in ipairs(BOSS_PATH) do 
+                obj = obj:FindFirstChild(part) 
+                if not obj then return nil end 
+            end
+            return obj
         end
-    })
 
-    local bossStatusLabel = Tabs.Boss:AddParagraph({ Title = "📊 สถานะบอส", Content = "กดเปิด Auto Boss เพื่อเริ่มติดตาม" })
-
-    task.spawn(function()
-        local waitingForRespawn, waitingForLoot, rejoinCooldown = false, false, false
-        local lastBossSeenTick = 0 
-
-        while true do
-            task.wait(bossCheckInterval)
-            if not (Options.AutoBoss and Options.AutoBoss.Value == true) or (Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true) then 
-                _G.isFightingBoss = false
-                pcall(function()
-                    local myChar = getMyCharacter()
-                    if myChar and myChar:FindFirstChild("HumanoidRootPart") then myChar.HumanoidRootPart.Anchored = false end
-                end)
-                continue 
-            end
-
-            local hoverH = (Options.BossHoverHeight and Options.BossHoverHeight.Value) or 30
-            bossSpawnThreshold = (Options.BossSpawnThreshold and Options.BossSpawnThreshold.Value) or 10
-
-            local char = getMyCharacter()
-            local myRoot = char and char:FindFirstChild("HumanoidRootPart")
-            local myHum = char and char:FindFirstChild("Humanoid")
-            if not (myRoot and myHum and myHum.Health > 0) then continue end
-
-            local marco = getMarco()
-            if not marco or (marco:FindFirstChild("Humanoid") and marco.Humanoid.Health <= 0) then
-                _G.isFightingBoss = false
-                myRoot.Anchored = false 
-                
-                if Options.SafeZone and Options.SafeZone.Value == true then continue end
-
-                local stSec = getServerTimeSec()
-                if stSec and (3600 - (stSec % 3600)) <= (bossSpawnThreshold * 60) then
-                    if not waitingForRespawn then waitingForRespawn = true KIDzUI:Notify({Title = "🐉 รอเวลาเกิด", Content = "รออยู่ที่นี่...", Duration = 4}) end
-                    continue 
-                end
-
-                if lastBossSeenTick > 0 then
-                    local waitDelay = Options.BossHopDelay and Options.BossHopDelay.Value or 30
-                    if tick() - lastBossSeenTick < waitDelay then
-                        if not waitingForLoot then waitingForLoot = true KIDzUI:Notify({Title = "⏳ รอเก็บของ", Content = "รอ " .. waitDelay .. " วิ...", Duration = 4}) end
-                        continue 
-                    end
-                end
-
-                waitingForLoot = false
-                if not waitingForRespawn then waitingForRespawn = true KIDzUI:Notify({Title = "🐉 ไม่พบบอส", Content = "หาเซิร์ฟใหม่...", Duration = 4}) end
-
-                if Options.AutoHopBoss and Options.AutoHopBoss.Value == true and not rejoinCooldown then
-                    rejoinCooldown = true
-                    task.spawn(function()
-                        task.wait(2)
-                        local best = findBestServer()
-                        if best and best.jobId then
-                            task.wait(3)
-                            totalDamageDealt, bossMaxHpSnapshot, lastBossHp = 0, 0, 0
-                            pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, best.jobId, lp) end)
-                        else 
-                            task.wait(5)
-                            pcall(function() TeleportService:Teleport(game.PlaceId, lp) end)
-                        end
-                    end)
-                end
-                continue
-            end
-
-            waitingForRespawn, waitingForLoot, rejoinCooldown = false, false, false
-            lastBossSeenTick = tick() 
-
-            local bossHum = marco:FindFirstChildWhichIsA("Humanoid")
-            local bossRoot = marco:FindFirstChild("HumanoidRootPart") or marco:FindFirstChildWhichIsA("BasePart")
-            if not bossRoot then continue end
-
-            if bossHum and bossHum.Health > 0 then
-                _G.isFightingBoss = true
-                local hoverPos = bossRoot.Position + Vector3.new(0, hoverH, 0)
-                myRoot.CFrame = CFrame.lookAt(hoverPos, bossRoot.Position)
-                myRoot.Anchored = true
-
-                local platform = workspace:FindFirstChild("KIDzHub_BossAnchor")
-                if not platform then
-                    platform = Instance.new("Part") platform.Name = "KIDzHub_BossAnchor" platform.Size = Vector3.new(10, 1, 10)
-                    platform.Transparency = 1 platform.Anchored = true platform.CanCollide = true platform.Parent = workspace
-                end
-                platform.CFrame = CFrame.new(myRoot.Position.X, myRoot.Position.Y - 3.5, myRoot.Position.Z)
-
-                local fruit = Options.FruitName.Value
-                local selectedSkills = Options.SelectedSkills and Options.SelectedSkills.Value
-
-                if not isPlaceholder(fruit) and type(selectedSkills) == "table" then
-                    local delayTime = (Options.SpamDelay and Options.SpamDelay.Value) or 1.0
-                    local bossTargetPos = bossRoot.Position
-                    if _G.kidzIsHoldingSkill then continue end
-                    
-                    local currentRage = getRage()
-                    local tCD = 0
-                    pcall(function()
-                        local cdFolder = lp:FindFirstChild("Cooldowns")
-                        if cdFolder and cdFolder:FindFirstChild("Transform") then tCD = cdFolder.Transform.Value or 0 end
-                    end)
-                    
-                    if currentRage < 5 and tCD > 0 then
-                        cancelAllAnimations()
-                        myRoot.Anchored = false
-                        task.wait(1.5)
-                        continue
-                    end
-                    
-                    for _, skillName in ipairs(skillOrder) do
-                        if selectedSkills[skillName] == true and not isPlaceholder(skillName) then
-                            local isAwakeningSkill = (skillName == "Transform" or skillName == "KROOM" or skillName == "Awakening" or skillName == "Rage")
-                            if isAwakeningSkill and currentRage < 100 then continue end
-
-                            local isOnCooldown = false
-                            pcall(function()
-                                local cdFolder = lp:FindFirstChild("Cooldowns")
-                                if cdFolder and cdFolder:FindFirstChild(skillName) then
-                                    if type(cdFolder[skillName].Value) == "number" and cdFolder[skillName].Value > 0 then isOnCooldown = true end
-                                end
-                            end)
-
-                            if isOnCooldown then continue end
-
-                            local ht = 0
-                            pcall(function()
-                                local sources = {lp:FindFirstChild("Backpack"), char}
-                                for _, p in ipairs(sources) do
-                                    if p then
-                                        for _, tool in ipairs(p:GetChildren()) do
-                                            local tName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool.Name
-                                            if type(tName) == "string" and string.gsub(tName, "%s+", "") == skillName then
-                                                ht = tool:GetAttribute("HoldTime") or tool:GetAttribute("MaxHold") or tool:GetAttribute("Duration") or tool:GetAttribute("ChargeTime") or 0
-                                                if ht == 0 and (tool:GetAttribute("Hold") == true or tool:GetAttribute("IsHold") == true) then ht = 1.0 end
-                                            end
-                                        end
-                                    end
-                                end
-                            end)
-                            
-                            if ht > 0 then
-                                fireSkill(fruit, skillName, bossTargetPos, ht)
-                                task.wait(ht + 0.2)
-                            else
-                                fireSkill(fruit, skillName, bossTargetPos, delayTime)
-                                task.wait(delayTime)
-                            end
-                            if isAwakeningSkill then task.wait(1.5) end
-                        end
-                    end
-                end
-            else
-                myRoot.Anchored = false
-                local platform = workspace:FindFirstChild("KIDzHub_BossAnchor")
-                if platform then platform:Destroy() end
-            end
+        local function timeToSeconds(timeStr)
+            if not timeStr then return nil end
+            local h, m, s = string.match(timeStr, "(%d+):(%d+):(%d+)")
+            if h and m and s then return tonumber(h) * 3600 + tonumber(m) * 60 + tonumber(s) end
+            local m2, s2 = string.match(timeStr, "(%d+):(%d+)")
+            if m2 and s2 then return tonumber(m2) * 60 + tonumber(s2) end
+            return nil
         end
-    end)
 
-    task.spawn(function()
-        while task.wait(1) do
-            if not (Options.AutoBoss and Options.AutoBoss.Value == true) then continue end
-            local marco = getMarco()
-            local stSec = getServerTimeSec()
-            local statusText = ""
-
-            if marco then
-                local bossHum = marco:FindFirstChildWhichIsA("Humanoid")
-                local hp = bossHum and math.floor(bossHum.Health) or 0
-                local maxHp = bossHum and math.floor(bossHum.MaxHealth) or 0
-
-                if maxHp > 0 and bossMaxHpSnapshot == 0 then bossMaxHpSnapshot = maxHp lastBossHp = hp end
-                if lastBossHp > 0 and hp < lastBossHp then totalDamageDealt = totalDamageDealt + (lastBossHp - hp) end
-                lastBossHp = hp
-
-                local hpPct = maxHp > 0 and math.floor((hp / maxHp) * 100) or 0
-                local dmgPct = bossMaxHpSnapshot > 0 and math.floor((totalDamageDealt / bossMaxHpSnapshot) * 100) or 0
-                statusText = "✅ Marco มีชีวิต\n❤️ HP บอส: " .. hp .. "/" .. maxHp .. " (" .. hpPct .. "%)\n⚔️ ดาเมจสะสม: " .. totalDamageDealt .. " (" .. dmgPct .. "%)"
-            else
-                local dmgPct = bossMaxHpSnapshot > 0 and math.floor((totalDamageDealt / bossMaxHpSnapshot) * 100) or 0
-                if Options.SafeZone and Options.SafeZone.Value == true then
-                    statusText = "💀 Marco ตายแล้ว (กำลังฟาร์มบนฟ้ารอเกิด)"
-                else
-                    statusText = "💀 Marco ตายแล้ว / ยังไม่ Spawn"
-                end
-                statusText = statusText .. "\n📊 ดาเมจรอบที่แล้ว: " .. totalDamageDealt .. " (" .. dmgPct .. "%)"
-                totalDamageDealt, bossMaxHpSnapshot, lastBossHp = 0, 0, 0
-                pcall(function()
-                    local myChar = getMyCharacter()
-                    if myChar and myChar:FindFirstChild("HumanoidRootPart") then myChar.HumanoidRootPart.Anchored = false end
-                end)
-            end
-
-            if stSec then
-                local secLeft = 3600 - (stSec % 3600)
-                statusText = statusText .. "\n⏱️ เกิดใหม่ใน: " .. string.format("%02d:%02d", math.floor(secLeft / 60), secLeft % 60)
-            end
-            pcall(function() bossStatusLabel:SetDesc(statusText) end)
+        local function getServerTimeSec()
+            local gui = lp:FindFirstChild("PlayerGui")
+            local ui = gui and gui:FindFirstChild("UI")
+            local info = ui and ui:FindFirstChild("Info")
+            local stLabel = info and info:FindFirstChild("ServerTime")
+            if not stLabel then return nil end
+            return timeToSeconds(string.match(stLabel.Text, "(%d+:%d+:%d+)"))
         end
-    end)
-end
 
--- =========================================================================
--- [หน้า Tools] เครื่องมือลดแลคขั้นสุดยอด, FPS, จอดำ & Server Manager
--- =========================================================================
-do
-    Tabs.Tools:AddParagraph({ Title = "🚀 การจัดการ FPS และลดแลค", Content = "ปรับแต่งภาพเพื่อลดการใช้ CPU/GPU เหมาะสำหรับการปล่อยบอทข้ามคืน" })
-
-    local TargetFPS = 60
-    Tabs.Tools:AddToggle("EnableFPSLock", { 
-        Title = "🖥️ เปิดใช้งาน FPS Lock", 
-        Default = false, 
-        Callback = function(v)
-            if v then
-                pcall(function() setfpscap(TargetFPS) end)
-            else
-                pcall(function() setfpscap(9999) end)
-            end
-        end
-    })
-
-    Tabs.Tools:AddSlider("FPSLockValue", { 
-        Title = "⚙️ ปรับค่า FPS (15 - 240)", 
-        Default = 60, Min = 15, Max = 240, Rounding = 0, 
-        Callback = function(v) 
-            TargetFPS = v
-            if Options.EnableFPSLock and Options.EnableFPSLock.Value then 
-                pcall(function() setfpscap(v) end) 
-            end
-        end
-    })
-
-    -- 🔥 [MASTER FIX] FPS Boost ขั้นสุดยอด (ลบทุกอย่างที่ขวางหน้า)
-    Tabs.Tools:AddToggle("FPSBoost", { 
-        Title = "🚀 เปิดใช้งาน FPS Boost (ลื่นขั้นสุดยอด)", 
-        Default = false, 
-        Callback = function(v)
-            if v then
-                pcall(function()
-                    local Lighting = game:GetService("Lighting")
-                    Lighting.GlobalShadows = false
-                    Lighting.FogEnd = 9e9
-                    Lighting.ShadowSoftness = 0
-                    
-                    if Lighting:FindFirstChildOfClass("Sky") then
-                        Lighting:FindFirstChildOfClass("Sky"):Destroy()
-                    end
-                    
-                    for _, effect in pairs(Lighting:GetChildren()) do
-                        if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") or effect:IsA("DepthOfFieldEffect") then
-                            effect.Enabled = false
-                        end
-                    end
-                    
-                    local Terrain = workspace:FindFirstChildOfClass("Terrain")
-                    if Terrain then
-                        Terrain.WaterWaveSize = 0
-                        Terrain.WaterWaveSpeed = 0
-                        Terrain.WaterReflectance = 0
-                        Terrain.WaterTransparency = 0
-                        Terrain:Clear() 
-                    end
-                    
-                    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
-                    
-                    -- ปิด Material 2022
-                    pcall(function() game:GetService("MaterialService").Use2022Materials = false end)
-                    
-                    for _, obj in pairs(workspace:GetDescendants()) do
-                        if obj:IsA("BasePart") and not obj:IsA("MeshPart") then
-                            obj.Material = Enum.Material.SmoothPlastic
-                            obj.Reflectance = 0
-                            obj.CastShadow = false
-                        elseif obj:IsA("Decal") or obj:IsA("Texture") then
-                            obj.Transparency = 1
-                        elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
-                            obj.Lifetime = NumberRange.new(0)
-                            obj.Enabled = false
-                        elseif obj:IsA("Explosion") then
-                            obj.Visible = false
-                        elseif obj:IsA("Fire") or obj:IsA("SpotLight") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("PointLight") or obj:IsA("SurfaceLight") then
-                            obj.Enabled = false
-                        elseif obj:IsA("MeshPart") then
-                            obj.Material = Enum.Material.SmoothPlastic
-                            obj.Reflectance = 0
-                            obj.CastShadow = false
-                        end
-                    end
-                    KIDzUI:Notify({Title="FPS Boost Extreme", Content="เปิดการลดกราฟิกขั้นสุดยอดเพื่อความลื่นไหลแล้ว!", Duration=3})
-                end)
-            else
-                KIDzUI:Notify({Title="FPS Boost", Content="ปิดการทำงาน (ภาพจะไม่กลับมาสวยจนกว่าคุณจะเข้าเกมใหม่)", Duration=5})
-            end
-        end 
-    })
-
-    -- 🔥 [MASTER FIX] Black Screen (จอดำมีปุ่มให้กดปิด)
-    Tabs.Tools:AddToggle("BlackScreen", { 
-        Title = "⬛ เปิดโหมดจอดำ (ประหยัดแบต/ลดแลค 100%)", 
-        Default = false, 
-        Callback = function(v) 
-            local gui = CoreGui:FindFirstChild("KIDz_BlackScreen")
-            if v then
-                if not gui then
-                    gui = Instance.new("ScreenGui")
-                    gui.Name = "KIDz_BlackScreen"
-                    gui.IgnoreGuiInset = true
-                    gui.DisplayOrder = 99999
-                    gui.Parent = CoreGui
-                    
-                    local frame = Instance.new("Frame", gui)
-                    frame.Size = UDim2.new(1, 0, 1, 0)
-                    frame.BackgroundColor3 = Color3.new(0, 0, 0)
-                    
-                    local btn = Instance.new("TextButton", frame)
-                    btn.Size = UDim2.new(1, 0, 1, 0)
-                    btn.BackgroundTransparency = 1
-                    btn.Text = "KIDz HUB : Black Screen Active\n\n[ คลิกที่หน้าจอดำนี้เพื่อปิดโหมด ]"
-                    btn.TextColor3 = Color3.new(1, 1, 1)
-                    btn.TextSize = 24
-                    btn.Font = Enum.Font.SourceSansBold
-                    
-                    btn.MouseButton1Click:Connect(function()
-                        if Options.BlackScreen then 
-                            Options.BlackScreen:SetValue(false) 
-                        end
-                    end)
-                end
-                gui.Enabled = true
-                pcall(function() RunService:Set3dRenderingEnabled(false) end)
-            else
-                if gui then gui.Enabled = false end
-                pcall(function() RunService:Set3dRenderingEnabled(true) end)
-            end
-        end 
-    })
-
-    Tabs.Tools:AddParagraph({ Title = "🌐 การจัดการเซิร์ฟเวอร์", Content = "จัดการ JobID และการย้ายเซิร์ฟ" })
-    
-    Tabs.Tools:AddButton({ 
-        Title = "📋 คัดลอก Job ID เซิร์ฟเวอร์นี้", 
-        Callback = function() 
-            pcall(function() 
-                setclipboard(game.JobId) 
-                KIDzUI:Notify({Title="สำเร็จ", Content="คัดลอก Job ID ลงคลิปบอร์ดแล้ว!", Duration=3}) 
-            end) 
-        end
-    })
-
-    local JoinJobIDInput = Tabs.Tools:AddInput("JoinJobID", { Title = "🔗 ใส่ Job ID ที่ต้องการเข้าร่วม", Default = "" })
-    
-    Tabs.Tools:AddButton({ 
-        Title = "🚀 เข้าร่วมเซิร์ฟเวอร์", 
-        Callback = function() 
-            local jid = Options.JoinJobID.Value
-            if jid and jid ~= "" then
-                pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, jid, lp) end)
-            else
-                KIDzUI:Notify({Title="แจ้งเตือน", Content="กรุณาใส่ Job ID ให้ถูกต้อง", Duration=3})
-            end
-        end
-    })
-
-    Tabs.Tools:AddButton({ 
-        Title = "🔀 สุ่มย้ายเซิร์ฟเวอร์ว่าง (Server Hop)", 
-        Callback = function() 
-            KIDzUI:Notify({Title="กำลังย้ายเซิร์ฟ", Content="กำลังค้นหาเซิร์ฟเวอร์ว่าง...", Duration=3})
-            task.spawn(function()
+        local function findBestServer()
+            pcall(function()
                 local req = request or http_request or (syn and syn.request)
                 if req then
                     local res = req({Url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"})
@@ -1710,165 +1574,573 @@ do
                                     table.insert(servers, v.id)
                                 end
                             end
-                            if #servers > 0 then
-                                TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], lp)
-                            end
+                            if #servers > 0 then return { jobId = servers[math.random(1, #servers)] } end
                         end
                     end
                 end
-                TeleportService:Teleport(game.PlaceId, lp)
             end)
+            return { jobId = nil }
         end
-    })
 
-    Tabs.Tools:AddParagraph({ Title = "การแสดงผลหน้าต่าง UI", Content = "ตั้งค่าการซ่อน/แสดงเมนู — กด LeftControl หรือปุ่มลอย" })
-    local HideUIToggle = Tabs.Tools:AddToggle("AutoHideUI", { Title = "ซ่อน UI อัตโนมัติเมื่อเข้าเกม", Default = false })
-    
-    local function sendMinimizeKey()
-        pcall(function()
-            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
-            task.wait(0.05)
-            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
+        Tabs.Boss:AddParagraph({ Title = "🐉 ระบบฟาร์มบอส Marco", Content = "วาร์ปขึ้นบินเหนือหัวบอส → ปล่อยสกิลอัตโนมัติ ล็อกเป้าหมาย 100%" })
+        Tabs.Boss:AddSlider("BossHoverHeight", { Title = "📏 ความสูงเหนือหัวบอส (Studs)", Default = 150, Min = 10, Max = 500, Rounding = 0 })
+        Tabs.Boss:AddSlider("BossSpawnThreshold", { Title = "⏳ หาเซิร์ฟที่บอสจะเกิดใน (นาที)", Default = 10, Min = 1, Max = 30, Rounding = 0 })
+        Tabs.Boss:AddSlider("BossHopDelay", { Title = "⏱️ หน่วงเวลาก่อนหาเซิร์ฟใหม่ (วินาที)", Default = 30, Min = 0, Max = 120, Rounding = 0 })
+        Tabs.Boss:AddToggle("AutoBoss", { Title = "⚔️ เปิดระบบฟาร์มบอส Marco อัตโนมัติ", Default = false })
+        Tabs.Boss:AddToggle("AutoHopBoss", { Title = "🔀 Rejoin หาเซิร์ฟบอสใกล้เกิดอัตโนมัติ", Default = false })
+
+        Tabs.Boss:AddButton({
+            Title = "📍 วาร์ปไปหาบอส Marco ทันที",
+            Callback = function()
+                local marco = getMarco()
+                if not marco then KIDzUI:Notify({Title = "❌ ไม่พบบอส", Content = "ไม่เจอ Marco ในแผนที่นี้", Duration = 3}) return end
+                local root = marco:FindFirstChild("HumanoidRootPart") or marco:FindFirstChildWhichIsA("BasePart")
+                if not root then return end
+                local myChar = getMyCharacter()
+                local myRoot = myChar and myChar:FindFirstChild("HumanoidRootPart")
+                if myRoot then myRoot.CFrame = CFrame.new(root.Position + Vector3.new(0, (Options.BossHoverHeight and Options.BossHoverHeight.Value or 30), 0)) end
+            end
+        })
+
+        local bossStatusLabel = Tabs.Boss:AddParagraph({ Title = "📊 สถานะบอส", Content = "กดเปิด Auto Boss เพื่อเริ่มติดตาม" })
+
+        task.spawn(function()
+            local waitingForRespawn, waitingForLoot, rejoinCooldown = false, false, false
+            local lastBossSeenTick = 0 
+
+            while true do
+                task.wait(bossCheckInterval)
+                if not (Options.AutoBoss and Options.AutoBoss.Value == true) or (Options.AutoSpinToggle and Options.AutoSpinToggle.Value == true) then 
+                    _G.isFightingBoss = false
+                    pcall(function()
+                        local myChar = getMyCharacter()
+                        if myChar and myChar:FindFirstChild("HumanoidRootPart") then myChar.HumanoidRootPart.Anchored = false end
+                    end)
+                    continue 
+                end
+
+                local hoverH = (Options.BossHoverHeight and Options.BossHoverHeight.Value) or 30
+                bossSpawnThreshold = (Options.BossSpawnThreshold and Options.BossSpawnThreshold.Value) or 10
+
+                local char = getMyCharacter()
+                local myRoot = char and char:FindFirstChild("HumanoidRootPart")
+                local myHum = char and char:FindFirstChild("Humanoid")
+                if not (myRoot and myHum and myHum.Health > 0) then continue end
+
+                local marco = getMarco()
+                if not marco or (marco:FindFirstChild("Humanoid") and marco.Humanoid.Health <= 0) then
+                    _G.isFightingBoss = false
+                    myRoot.Anchored = false 
+                    
+                    if Options.SafeZone and Options.SafeZone.Value == true then continue end
+
+                    local stSec = getServerTimeSec()
+                    if stSec and (3600 - (stSec % 3600)) <= (bossSpawnThreshold * 60) then
+                        if not waitingForRespawn then waitingForRespawn = true KIDzUI:Notify({Title = "🐉 รอเวลาเกิด", Content = "รออยู่ที่นี่...", Duration = 4}) end
+                        continue 
+                    end
+
+                    if lastBossSeenTick > 0 then
+                        local waitDelay = Options.BossHopDelay and Options.BossHopDelay.Value or 30
+                        if tick() - lastBossSeenTick < waitDelay then
+                            if not waitingForLoot then waitingForLoot = true KIDzUI:Notify({Title = "⏳ รอเก็บของ", Content = "รอ " .. waitDelay .. " วิ...", Duration = 4}) end
+                            continue 
+                        end
+                    end
+
+                    waitingForLoot = false
+                    if not waitingForRespawn then waitingForRespawn = true KIDzUI:Notify({Title = "🐉 ไม่พบบอส", Content = "หาเซิร์ฟใหม่...", Duration = 4}) end
+
+                    if Options.AutoHopBoss and Options.AutoHopBoss.Value == true and not rejoinCooldown then
+                        rejoinCooldown = true
+                        task.spawn(function()
+                            task.wait(2)
+                            local best = findBestServer()
+                            if best and best.jobId then
+                                task.wait(3)
+                                totalDamageDealt, bossMaxHpSnapshot, lastBossHp = 0, 0, 0
+                                pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, best.jobId, lp) end)
+                            else 
+                                task.wait(5)
+                                pcall(function() TeleportService:Teleport(game.PlaceId, lp) end)
+                            end
+                        end)
+                    end
+                    continue
+                end
+
+                waitingForRespawn, waitingForLoot, rejoinCooldown = false, false, false
+                lastBossSeenTick = tick() 
+
+                local bossHum = marco:FindFirstChildWhichIsA("Humanoid")
+                local bossRoot = marco:FindFirstChild("HumanoidRootPart") or marco:FindFirstChildWhichIsA("BasePart")
+                if not bossRoot then continue end
+
+                if bossHum and bossHum.Health > 0 then
+                    _G.isFightingBoss = true
+                    local hoverPos = bossRoot.Position + Vector3.new(0, hoverH, 0)
+                    myRoot.CFrame = CFrame.lookAt(hoverPos, bossRoot.Position)
+                    myRoot.Anchored = true
+
+                    local platform = workspace:FindFirstChild("KIDzHub_BossAnchor")
+                    if not platform then
+                        platform = Instance.new("Part") platform.Name = "KIDzHub_BossAnchor" platform.Size = Vector3.new(10, 1, 10)
+                        platform.Transparency = 1 platform.Anchored = true platform.CanCollide = true platform.Parent = workspace
+                    end
+                    platform.CFrame = CFrame.new(myRoot.Position.X, myRoot.Position.Y - 3.5, myRoot.Position.Z)
+
+                    local fruit = Options.FruitName.Value
+                    local selectedSkills = Options.SelectedSkills and Options.SelectedSkills.Value
+
+                    if not isPlaceholder(fruit) and type(selectedSkills) == "table" then
+                        local delayTime = (Options.SpamDelay and Options.SpamDelay.Value) or 1.0
+                        local bossTargetPos = bossRoot.Position
+                        if _G.kidzIsHoldingSkill then continue end
+                        
+                        local currentRage = getRage()
+                        local tCD = 0
+                        pcall(function()
+                            local cdFolder = lp:FindFirstChild("Cooldowns")
+                            if cdFolder and cdFolder:FindFirstChild("Transform") then tCD = cdFolder.Transform.Value or 0 end
+                        end)
+                        
+                        if currentRage < 5 and tCD > 0 then
+                            cancelAllAnimations()
+                            myRoot.Anchored = false
+                            task.wait(1.5)
+                            continue
+                        end
+                        
+                        for _, skillName in ipairs(skillOrder) do
+                            if selectedSkills[skillName] == true and not isPlaceholder(skillName) then
+                                local isAwakeningSkill = (skillName == "Transform" or skillName == "KROOM" or skillName == "Awakening" or skillName == "Rage")
+                                if isAwakeningSkill and currentRage < 100 then continue end
+
+                                local isOnCooldown = false
+                                pcall(function()
+                                    local cdFolder = lp:FindFirstChild("Cooldowns")
+                                    if cdFolder and cdFolder:FindFirstChild(skillName) then
+                                        if type(cdFolder[skillName].Value) == "number" and cdFolder[skillName].Value > 0 then isOnCooldown = true end
+                                    end
+                                end)
+
+                                if isOnCooldown then continue end
+
+                                local ht = 0
+                                pcall(function()
+                                    local sources = {lp:FindFirstChild("Backpack"), char}
+                                    for _, p in ipairs(sources) do
+                                        if p then
+                                            for _, tool in ipairs(p:GetChildren()) do
+                                                local tName = tool:GetAttribute("Name") or tool:GetAttribute("SkillName") or tool.Name
+                                                if type(tName) == "string" and string.gsub(tName, "%s+", "") == skillName then
+                                                    ht = tool:GetAttribute("HoldTime") or tool:GetAttribute("MaxHold") or tool:GetAttribute("Duration") or tool:GetAttribute("ChargeTime") or 0
+                                                    if ht == 0 and (tool:GetAttribute("Hold") == true or tool:GetAttribute("IsHold") == true) then ht = 1.0 end
+                                                end
+                                            end
+                                        end
+                                    end
+                                end)
+                                
+                                if ht > 0 then
+                                    fireSkill(fruit, skillName, bossTargetPos, ht)
+                                    task.wait(ht + 0.2)
+                                else
+                                    fireSkill(fruit, skillName, bossTargetPos, delayTime)
+                                    task.wait(delayTime)
+                                end
+                                if isAwakeningSkill then task.wait(1.5) end
+                            end
+                        end
+                    end
+                else
+                    myRoot.Anchored = false
+                    local platform = workspace:FindFirstChild("KIDzHub_BossAnchor")
+                    if platform then platform:Destroy() end
+                end
+            end
+        end)
+
+        task.spawn(function()
+            while task.wait(1) do
+                if not (Options.AutoBoss and Options.AutoBoss.Value == true) then continue end
+                local marco = getMarco()
+                local stSec = getServerTimeSec()
+                local statusText = ""
+
+                if marco then
+                    local bossHum = marco:FindFirstChildWhichIsA("Humanoid")
+                    local hp = bossHum and math.floor(bossHum.Health) or 0
+                    local maxHp = bossHum and math.floor(bossHum.MaxHealth) or 0
+
+                    if maxHp > 0 and bossMaxHpSnapshot == 0 then bossMaxHpSnapshot = maxHp lastBossHp = hp end
+                    if lastBossHp > 0 and hp < lastBossHp then totalDamageDealt = totalDamageDealt + (lastBossHp - hp) end
+                    lastBossHp = hp
+
+                    local hpPct = maxHp > 0 and math.floor((hp / maxHp) * 100) or 0
+                    local dmgPct = bossMaxHpSnapshot > 0 and math.floor((totalDamageDealt / bossMaxHpSnapshot) * 100) or 0
+                    statusText = "✅ Marco มีชีวิต\n❤️ HP บอส: " .. hp .. "/" .. maxHp .. " (" .. hpPct .. "%)\n⚔️ ดาเมจสะสม: " .. totalDamageDealt .. " (" .. dmgPct .. "%)"
+                else
+                    local dmgPct = bossMaxHpSnapshot > 0 and math.floor((totalDamageDealt / bossMaxHpSnapshot) * 100) or 0
+                    if Options.SafeZone and Options.SafeZone.Value == true then
+                        statusText = "💀 Marco ตายแล้ว (กำลังฟาร์มบนฟ้ารอเกิด)"
+                    else
+                        statusText = "💀 Marco ตายแล้ว / ยังไม่ Spawn"
+                    end
+                    statusText = statusText .. "\n📊 ดาเมจรอบที่แล้ว: " .. totalDamageDealt .. " (" .. dmgPct .. "%)"
+                    totalDamageDealt, bossMaxHpSnapshot, lastBossHp = 0, 0, 0
+                    pcall(function()
+                        local myChar = getMyCharacter()
+                        if myChar and myChar:FindFirstChild("HumanoidRootPart") then myChar.HumanoidRootPart.Anchored = false end
+                    end)
+                end
+
+                if stSec then
+                    local secLeft = 3600 - (stSec % 3600)
+                    statusText = statusText .. "\n⏱️ เกิดใหม่ใน: " .. string.format("%02d:%02d", math.floor(secLeft / 60), secLeft % 60)
+                end
+                pcall(function() bossStatusLabel:SetDesc(statusText) end)
+            end
         end)
     end
-    
-    Tabs.Tools:AddButton({ Title = "ซ่อนหน้าต่างทันที", Callback = function() 
-        _G.isUIOpen = not _G.isUIOpen
-        sendMinimizeKey() 
-    end })
-    
-    task.spawn(function()
-        local hasHiddenOnce = false
-        while task.wait(1) do
-            if Options.AutoHideUI and Options.AutoHideUI.Value == true and not hasHiddenOnce then
-                local char = getMyCharacter()
-                local hum = char and char:FindFirstChild("Humanoid")
-                if hum and hum.Health > 0 then
-                    task.wait(3) 
-                    if _G.isUIOpen then 
-                        _G.isUIOpen = false
-                        sendMinimizeKey() 
-                    end
-                    hasHiddenOnce = true 
+
+    -- =========================================================================
+    -- [หน้า Tools] เครื่องมือลดแลคขั้นสุดยอด, FPS, จอดำ & Server Manager
+    -- =========================================================================
+    do
+        Tabs.Tools:AddParagraph({ Title = "🚀 การจัดการ FPS และลดแลค", Content = "ปรับแต่งภาพเพื่อลดการใช้ CPU/GPU เหมาะสำหรับการปล่อยบอทข้ามคืน" })
+
+        local TargetFPS = 60
+        Tabs.Tools:AddToggle("EnableFPSLock", { 
+            Title = "🖥️ เปิดใช้งาน FPS Lock", 
+            Default = false, 
+            Callback = function(v)
+                if v then
+                    pcall(function() setfpscap(TargetFPS) end)
+                else
+                    pcall(function() setfpscap(9999) end)
                 end
-            elseif Options.AutoHideUI and Options.AutoHideUI.Value == false then
-                hasHiddenOnce = false
             end
-        end
-    end)
-end
+        })
 
--- =========================================================================
--- กันหลุด AFK
--- =========================================================================
-pcall(function()
-    lp.Idled:Connect(function()
-        VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-        task.wait(0.1)
-        VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-    end)
-end)
-
--- =========================================================================
--- [มือถือ] ปุ่มลอยเปิด/ปิดหน้าต่าง
--- =========================================================================
-local function createMobileButton()
-    local checkGui = CoreGui:FindFirstChild("KIDzHub_MobileUI")
-    if checkGui then checkGui:Destroy() end
-
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "KIDzHub_MobileUI"
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.ResetOnSpawn = false
-    screenGui.Parent = CoreGui
-
-    local mainBtn = Instance.new("TextButton")
-    mainBtn.Name = "ToggleMenu"
-    mainBtn.Size = UDim2.new(0, 65, 0, 65)
-    mainBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
-    mainBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 30)
-    mainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    mainBtn.Text = "KIDz"
-    mainBtn.Font = Enum.Font.SourceSansBold
-    mainBtn.TextSize = 18
-    mainBtn.Parent = screenGui
-
-    local uiCorner = Instance.new("UICorner")
-    uiCorner.CornerRadius = UDim.new(0, 15)
-    uiCorner.Parent = mainBtn
-
-    local uiStroke = Instance.new("UIStroke")
-    uiStroke.Color = Color3.fromRGB(0, 122, 255)
-    uiStroke.Thickness = 2
-    uiStroke.Parent = mainBtn
-
-    local dragging = false
-    local dragInput, dragStart, startPos
-    local isMoved = false
-
-    mainBtn.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true 
-            isMoved = false 
-            dragStart = input.Position 
-            startPos = mainBtn.Position
-        end
-    end)
-
-    mainBtn.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
-            dragInput = input 
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then 
-                isMoved = true 
+        Tabs.Tools:AddSlider("FPSLockValue", { 
+            Title = "⚙️ ปรับค่า FPS (15 - 240)", 
+            Default = 60, Min = 15, Max = 240, Rounding = 0, 
+            Callback = function(v) 
+                TargetFPS = v
+                if Options.EnableFPSLock and Options.EnableFPSLock.Value then 
+                    pcall(function() setfpscap(v) end) 
+                end
             end
-            mainBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
+        })
 
-    mainBtn.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-            if not isMoved then
-                _G.isUIOpen = not _G.isUIOpen
+        -- 🔥 [MASTER FIX] FPS Boost ขั้นสุดยอด (ลบทุกอย่างที่ขวางหน้า)
+        Tabs.Tools:AddToggle("FPSBoost", { 
+            Title = "🚀 เปิดใช้งาน FPS Boost (ลื่นขั้นสุดยอด)", 
+            Default = false, 
+            Callback = function(v)
+                if v then
+                    pcall(function()
+                        local Lighting = game:GetService("Lighting")
+                        Lighting.GlobalShadows = false
+                        Lighting.FogEnd = 9e9
+                        Lighting.ShadowSoftness = 0
+                        
+                        if Lighting:FindFirstChildOfClass("Sky") then
+                            Lighting:FindFirstChildOfClass("Sky"):Destroy()
+                        end
+                        
+                        for _, effect in pairs(Lighting:GetChildren()) do
+                            if effect:IsA("PostEffect") or effect:IsA("BlurEffect") or effect:IsA("SunRaysEffect") or effect:IsA("ColorCorrectionEffect") or effect:IsA("BloomEffect") or effect:IsA("DepthOfFieldEffect") then
+                                effect.Enabled = false
+                            end
+                        end
+                        
+                        local Terrain = workspace:FindFirstChildOfClass("Terrain")
+                        if Terrain then
+                            Terrain.WaterWaveSize = 0
+                            Terrain.WaterWaveSpeed = 0
+                            Terrain.WaterReflectance = 0
+                            Terrain.WaterTransparency = 0
+                            Terrain:Clear() 
+                        end
+                        
+                        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+                        
+                        -- ปิด Material 2022
+                        pcall(function() game:GetService("MaterialService").Use2022Materials = false end)
+                        
+                        for _, obj in pairs(workspace:GetDescendants()) do
+                            if obj:IsA("BasePart") and not obj:IsA("MeshPart") then
+                                obj.Material = Enum.Material.SmoothPlastic
+                                obj.Reflectance = 0
+                                obj.CastShadow = false
+                            elseif obj:IsA("Decal") or obj:IsA("Texture") then
+                                obj.Transparency = 1
+                            elseif obj:IsA("ParticleEmitter") or obj:IsA("Trail") then
+                                obj.Lifetime = NumberRange.new(0)
+                                obj.Enabled = false
+                            elseif obj:IsA("Explosion") then
+                                obj.Visible = false
+                            elseif obj:IsA("Fire") or obj:IsA("SpotLight") or obj:IsA("Smoke") or obj:IsA("Sparkles") or obj:IsA("PointLight") or obj:IsA("SurfaceLight") then
+                                obj.Enabled = false
+                            elseif obj:IsA("MeshPart") then
+                                obj.Material = Enum.Material.SmoothPlastic
+                                obj.Reflectance = 0
+                                obj.CastShadow = false
+                            end
+                        end
+                        KIDzUI:Notify({Title="FPS Boost Extreme", Content="เปิดการลดกราฟิกขั้นสุดยอดเพื่อความลื่นไหลแล้ว!", Duration=3})
+                    end)
+                else
+                    KIDzUI:Notify({Title="FPS Boost", Content="ปิดการทำงาน (ภาพจะไม่กลับมาสวยจนกว่าคุณจะเข้าเกมใหม่)", Duration=5})
+                end
+            end 
+        })
+
+        -- 🔥 [MASTER FIX] Black Screen (จอดำมีปุ่มให้กดปิด)
+        Tabs.Tools:AddToggle("BlackScreen", { 
+            Title = "⬛ เปิดโหมดจอดำ (ประหยัดแบต/ลดแลค 100%)", 
+            Default = false, 
+            Callback = function(v) 
+                local gui = CoreGui:FindFirstChild("KIDz_BlackScreen")
+                if v then
+                    if not gui then
+                        gui = Instance.new("ScreenGui")
+                        gui.Name = "KIDz_BlackScreen"
+                        gui.IgnoreGuiInset = true
+                        gui.DisplayOrder = 99999
+                        gui.Parent = CoreGui
+                        
+                        local frame = Instance.new("Frame", gui)
+                        frame.Size = UDim2.new(1, 0, 1, 0)
+                        frame.BackgroundColor3 = Color3.new(0, 0, 0)
+                        
+                        local btn = Instance.new("TextButton", frame)
+                        btn.Size = UDim2.new(1, 0, 1, 0)
+                        btn.BackgroundTransparency = 1
+                        btn.Text = "KIDz HUB : Black Screen Active\n\n[ คลิกที่หน้าจอดำนี้เพื่อปิดโหมด ]"
+                        btn.TextColor3 = Color3.new(1, 1, 1)
+                        btn.TextSize = 24
+                        btn.Font = Enum.Font.SourceSansBold
+                        
+                        btn.MouseButton1Click:Connect(function()
+                            if Options.BlackScreen then 
+                                Options.BlackScreen:SetValue(false) 
+                            end
+                        end)
+                    end
+                    gui.Enabled = true
+                    pcall(function() RunService:Set3dRenderingEnabled(false) end)
+                else
+                    if gui then gui.Enabled = false end
+                    pcall(function() RunService:Set3dRenderingEnabled(true) end)
+                end
+            end 
+        })
+
+        Tabs.Tools:AddParagraph({ Title = "🌐 การจัดการเซิร์ฟเวอร์", Content = "จัดการ JobID และการย้ายเซิร์ฟ" })
+        
+        Tabs.Tools:AddButton({ 
+            Title = "📋 คัดลอก Job ID เซิร์ฟเวอร์นี้", 
+            Callback = function() 
+                pcall(function() 
+                    setclipboard(game.JobId) 
+                    KIDzUI:Notify({Title="สำเร็จ", Content="คัดลอก Job ID ลงคลิปบอร์ดแล้ว!", Duration=3}) 
+                end) 
+            end
+        })
+
+        local JoinJobIDInput = Tabs.Tools:AddInput("JoinJobID", { Title = "🔗 ใส่ Job ID ที่ต้องการเข้าร่วม", Default = "" })
+        
+        Tabs.Tools:AddButton({ 
+            Title = "🚀 เข้าร่วมเซิร์ฟเวอร์", 
+            Callback = function() 
+                local jid = Options.JoinJobID.Value
+                if jid and jid ~= "" then
+                    pcall(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, jid, lp) end)
+                else
+                    KIDzUI:Notify({Title="แจ้งเตือน", Content="กรุณาใส่ Job ID ให้ถูกต้อง", Duration=3})
+                end
+            end
+        })
+
+        Tabs.Tools:AddButton({ 
+            Title = "🔀 สุ่มย้ายเซิร์ฟเวอร์ว่าง (Server Hop)", 
+            Callback = function() 
+                KIDzUI:Notify({Title="กำลังย้ายเซิร์ฟ", Content="กำลังค้นหาเซิร์ฟเวอร์ว่าง...", Duration=3})
+                task.spawn(function()
+                    local req = request or http_request or (syn and syn.request)
+                    if req then
+                        local res = req({Url = "https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"})
+                        if res and res.Body then
+                            local data = HttpService:JSONDecode(res.Body)
+                            if data and data.data then
+                                local servers = {}
+                                for _, v in ipairs(data.data) do
+                                    if type(v) == "table" and v.playing < v.maxPlayers and v.id ~= game.JobId then
+                                        table.insert(servers, v.id)
+                                    end
+                                end
+                                if #servers > 0 then
+                                    TeleportService:TeleportToPlaceInstance(game.PlaceId, servers[math.random(1, #servers)], lp)
+                                end
+                            end
+                        end
+                    end
+                    TeleportService:Teleport(game.PlaceId, lp)
+                end)
+            end
+        })
+
+        Tabs.Tools:AddParagraph({ Title = "การแสดงผลหน้าต่าง UI", Content = "ตั้งค่าการซ่อน/แสดงเมนู — กด LeftControl หรือปุ่มลอย" })
+        local HideUIToggle = Tabs.Tools:AddToggle("AutoHideUI", { Title = "ซ่อน UI อัตโนมัติเมื่อเข้าเกม", Default = false })
+        
+        local function sendMinimizeKey()
+            pcall(function()
                 VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
                 task.wait(0.05)
                 VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
-            end
+            end)
         end
-    end)
-end
+        
+        Tabs.Tools:AddButton({ Title = "ซ่อนหน้าต่างทันที", Callback = function() 
+            _G.isUIOpen = not _G.isUIOpen
+            sendMinimizeKey() 
+        end })
+        
+        task.spawn(function()
+            local hasHiddenOnce = false
+            while task.wait(1) do
+                if Options.AutoHideUI and Options.AutoHideUI.Value == true and not hasHiddenOnce then
+                    local char = getMyCharacter()
+                    local hum = char and char:FindFirstChild("Humanoid")
+                    if hum and hum.Health > 0 then
+                        task.wait(3) 
+                        if _G.isUIOpen then 
+                            _G.isUIOpen = false
+                            sendMinimizeKey() 
+                        end
+                        hasHiddenOnce = true 
+                    end
+                elseif Options.AutoHideUI and Options.AutoHideUI.Value == false then
+                    hasHiddenOnce = false
+                end
+            end
+        end)
+    end
 
-createMobileButton()
-
--- =========================================================================
--- บันทึกและโหลดการตั้งค่าอัตโนมัติ (แบบเรียลไทม์ เซฟทันทีที่กด!)
--- =========================================================================
-SaveManager:SetLibrary(KIDzUI)
-InterfaceManager:SetLibrary(KIDzUI)
-SaveManager:IgnoreThemeSettings()
-SaveManager:SetIgnoreIndexes({})
-
-InterfaceManager:SetFolder("KIDzHUB")
-SaveManager:SetFolder("KIDzHUB/FruitBattlegrounds")
-InterfaceManager:BuildInterfaceSection(Tabs.Settings)
-SaveManager:BuildConfigSection(Tabs.Settings)
-Window:SelectTab(1)
-
-pcall(function() SaveManager:Load("AutoSave_Default") kidzLog("Loaded instantly.") end)
-
-for optionName, option in pairs(Options) do
+    -- =========================================================================
+    -- กันหลุด AFK
+    -- =========================================================================
     pcall(function()
-        option:OnChanged(function()
-            task.delay(0.1, function() pcall(function() SaveManager:Save("AutoSave_Default") end) end)
+        lp.Idled:Connect(function()
+            VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+            task.wait(0.1)
+            VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
         end)
     end)
-end
 
-KIDzUI:Notify({ Title = "KIDz HUB", Content = "การอัปเดตระบบ Masterpiece สุดท้ายเสร็จสมบูรณ์!", Duration = 5 })
-kidzLog("Initialization complete. Script is fully loaded and ready to use!")
+    -- =========================================================================
+    -- [มือถือ] ปุ่มลอยเปิด/ปิดหน้าต่าง
+    -- =========================================================================
+    local function createMobileButton()
+        local checkGui = CoreGui:FindFirstChild("KIDzHub_MobileUI")
+        if checkGui then checkGui:Destroy() end
+
+        local screenGui = Instance.new("ScreenGui")
+        screenGui.Name = "KIDzHub_MobileUI"
+        screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+        screenGui.ResetOnSpawn = false
+        screenGui.Parent = CoreGui
+
+        local mainBtn = Instance.new("TextButton")
+        mainBtn.Name = "ToggleMenu"
+        mainBtn.Size = UDim2.new(0, 65, 0, 65)
+        mainBtn.Position = UDim2.new(0.05, 0, 0.25, 0)
+        mainBtn.BackgroundColor3 = Color3.fromRGB(28, 28, 30)
+        mainBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        mainBtn.Text = "KIDz"
+        mainBtn.Font = Enum.Font.SourceSansBold
+        mainBtn.TextSize = 18
+        mainBtn.Parent = screenGui
+
+        local uiCorner = Instance.new("UICorner")
+        uiCorner.CornerRadius = UDim.new(0, 15)
+        uiCorner.Parent = mainBtn
+
+        local uiStroke = Instance.new("UIStroke")
+        uiStroke.Color = Color3.fromRGB(0, 122, 255)
+        uiStroke.Thickness = 2
+        uiStroke.Parent = mainBtn
+
+        local dragging = false
+        local dragInput, dragStart, startPos
+        local isMoved = false
+
+        mainBtn.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true 
+                isMoved = false 
+                dragStart = input.Position 
+                startPos = mainBtn.Position
+            end
+        end)
+
+        mainBtn.InputChanged:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then 
+                dragInput = input 
+            end
+        end)
+
+        UserInputService.InputChanged:Connect(function(input)
+            if input == dragInput and dragging then
+                local delta = input.Position - dragStart
+                if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then 
+                    isMoved = true 
+                end
+                mainBtn.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+            end
+        end)
+
+        mainBtn.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+                if not isMoved then
+                    _G.isUIOpen = not _G.isUIOpen
+                    VirtualInputManager:SendKeyEvent(true, Enum.KeyCode.LeftControl, false, game)
+                    task.wait(0.05)
+                    VirtualInputManager:SendKeyEvent(false, Enum.KeyCode.LeftControl, false, game)
+                end
+            end
+        end)
+    end
+
+    createMobileButton()
+
+    -- =========================================================================
+    -- บันทึกและโหลดการตั้งค่าอัตโนมัติ (แบบเรียลไทม์ เซฟทันทีที่กด!)
+    -- =========================================================================
+    SaveManager:SetLibrary(KIDzUI)
+    InterfaceManager:SetLibrary(KIDzUI)
+    SaveManager:IgnoreThemeSettings()
+    SaveManager:SetIgnoreIndexes({})
+
+    InterfaceManager:SetFolder("KIDzHUB")
+    SaveManager:SetFolder("KIDzHUB/FruitBattlegrounds")
+    InterfaceManager:BuildInterfaceSection(Tabs.Settings)
+    SaveManager:BuildConfigSection(Tabs.Settings)
+    Window:SelectTab(1)
+
+    pcall(function() SaveManager:Load("AutoSave_Default") kidzLog("Loaded instantly.") end)
+
+    for optionName, option in pairs(Options) do
+        pcall(function()
+            option:OnChanged(function()
+                task.delay(0.1, function() pcall(function() SaveManager:Save("AutoSave_Default") end) end)
+            end)
+        end)
+    end
+
+    KIDzUI:Notify({ Title = "KIDz HUB", Content = "การอัปเดตระบบ Masterpiece สุดท้ายเสร็จสมบูรณ์!", Duration = 5 })
+    kidzLog("Initialization complete. Script is fully loaded and ready to use!")
